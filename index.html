@@ -688,6 +688,11 @@ async function saveIns() {
   if (known) codice = known;
   else if (articoli.length && !confirm(`«${codice}» non è nell'elenco articoli. Salvare comunque?`)) return;
   const btn = $('#f-save'); btn.disabled = true;
+  const { data: dup } = await sb.from(T_MAN).select('quantita,firmatario').eq('tipo', 'segnalazione').eq('eliminato', false).eq('codice', codice).eq('data_foglio', d).limit(5);
+  if (dup && dup.length) {
+    const lista = dup.map(x => `-${x.quantita} (${esc(x.firmatario)})`).join(', ');
+    if (!confirm(`«${codice}» è già stato inserito per il foglio del ${fmtD(d)}: ${lista}.\nAggiungerlo comunque?`)) { btn.disabled = false; return; }
+  }
   const { error } = await sb.from(T_MAN).insert({ tipo: 'segnalazione', codice, ubicazione: ubic, quantita: q, firmatario: f, data_foglio: d, modificato_da: f });
   btn.disabled = false;
   if (error) return toast(error.message, 'bad');
