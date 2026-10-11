@@ -88,6 +88,11 @@ input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--pri)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .gridf{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
 .hint{font-size:13px;margin-top:6px;min-height:18px}
+.qw{position:relative}
+.qw::before{content:"-";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:20px;font-weight:800;color:var(--bad);pointer-events:none}
+.qw input{padding-left:30px;font-weight:700}
+
+
 .muted{color:var(--mut)}
 .note{font-size:12.5px;color:var(--mut);margin-top:6px}
 
@@ -291,7 +296,7 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
         <div class="hint" id="f-hint"></div>
         <div class="grid2">
           <div><label class="first">Ubicazione</label><input id="f-ubi" autocomplete="off" autocapitalize="characters" placeholder="es. A.01.01.01"></div>
-          <div><label class="first">Quantità mancante</label><input id="f-qty" type="number" inputmode="numeric" min="1" placeholder="0"></div>
+<div><label class="first">Quantità mancante</label><div class="qw"><input id="f-qty" type="number" inputmode="numeric" min="1" placeholder="0"></div></div>
         </div>
         <label>Data del foglio</label>
         <input id="f-data" type="date">
@@ -400,7 +405,7 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
   <div><input id="e-cod" autocomplete="off"></div>
   <div class="grid2">
     <div><label>Ubicazione</label><input id="e-ubi"></div>
-    <div><label>Quantità</label><input id="e-qty" type="number" inputmode="numeric" min="1"></div>
+<div><label>Quantità</label><div class="qw"><input id="e-qty" type="number" inputmode="numeric" min="1"></div></div>
   </div>
   <label>Data del foglio</label>
   <input id="e-data" type="date">
