@@ -846,6 +846,7 @@ async function loadVer() {
   const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).in('stato', verStato === 'nuovo' ? ['nuovo', 'sc_fatta'] : [verStato]).order('created_at', { ascending: false }).limit(200);
 
   if (error) return toast(error.message, 'bad');
+  if (verStato === 'nuovo') data.sort((a, b) => (b.stato === 'sc_fatta') - (a.stato === 'sc_fatta'));
   await loadDup(data);
   renderList($('#ver-list'), data, 'ver', 'Niente in questa categoria');
 }
