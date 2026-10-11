@@ -565,6 +565,12 @@ function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt
     const d = e.target.closest('div'); if (!d) return; e.preventDefault();
     inp.value = d.dataset.v; box.hidden = true; check();
   });
+  inp.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || box.hidden) return;
+    const first = box.querySelector('div'); if (!first) return;
+    e.preventDefault(); e.stopPropagation();
+    inp.value = first.dataset.v; box.hidden = true; check();
+  });
   inp.addEventListener('blur', () => setTimeout(() => box.hidden = true, 150));
 }
 
