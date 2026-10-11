@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>KOH-I-NOOR · Articoli mancanti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --spruce:#0d3a37;--spruce2:#124a45;--bg:#edf2f0;--card:#fff;--ink:#14211f;--mut:#5d716b;--line:#d6e0dc;--soft:#f4f8f7;
+  --pri:#c2410c;--pri-h:#a8360a;--glow:#ff8a3d;
+  --ok:#137a47;--okbg:#dcf3e6;--warn:#a65a05;--warnbg:#fdecc8;--bad:#c01f3a;--badbg:#fde0e5;--info:#0c6f8c;--infobg:#d9eff6;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:90px}
+body{margin:0;font:15px/1.45 "Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+svg.i{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+button,input,select{font:inherit}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+
+/* ---------- struttura ---------- */
+.app{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--spruce);color:#c8dedb;padding:20px 14px;display:flex;flex-direction:column;gap:3px;overflow:auto}
+.brand{display:flex;align-items:center;gap:12px;color:#fff;padding:2px 10px 16px}
+.brand .logo{width:40px;height:40px;border-radius:8px;object-fit:cover;background:#fff;flex:0 0 auto}
+.brand .mark svg{width:24px;height:24px;stroke-width:2.2}
+.brand b{font-size:20px;font-weight:800;letter-spacing:-.01em;display:block;line-height:1.1}
+.brand span{font-size:12.5px;color:#8fb5af}
+.grp{font-size:12.5px;color:#7fa8a1;padding:16px 12px 6px;font-weight:600}
+.nav{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:0;border-radius:11px;background:none;color:#c8dedb;font-weight:600;font-size:15px;cursor:pointer;text-align:left;transition:background .15s,color .15s}
+.nav:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav.on{background:rgba(255,255,255,.13);color:#fff}
+.nav.on::before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:4px;border-radius:0 4px 4px 0;background:var(--glow)}
+.nav .cnt{margin-left:auto}
+.cnt{display:inline-block;min-width:22px;padding:1px 7px;border-radius:11px;background:var(--glow);color:#3a1500;font-size:12px;font-weight:800;text-align:center}
+.cnt:empty,.cnt[data-n="0"]{display:none}
+.content{padding:0 32px 48px;min-width:0}
+.topbar{position:sticky;top:0;z-index:25;display:flex;align-items:center;gap:20px;padding:20px 0 16px;background:linear-gradient(var(--bg) 80%,rgba(237,242,240,0))}
+.topbar h1{margin:0;font-size:28px;font-weight:800;letter-spacing:-.02em;flex:1;line-height:1.15}
+.sig{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 6px 0 12px;color:var(--mut)}
+.sig .firme-bar{min-width:210px}
+.sig select{border:0;background:none;padding:11px 6px;font-weight:700;color:var(--ink);cursor:pointer;width:100%}
+.sig select:focus-visible{outline:0}
+.sig:focus-within{outline:2px solid var(--glow);outline-offset:2px}
+#clock{text-align:right;line-height:1.15;color:var(--mut);font-size:13px;min-width:150px}
+#clock b{display:block;font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.view{display:none}.view.on{display:block}
+.nav .sm{display:none}
+
+/* ---------- componenti ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.card + .card{margin-top:16px}
+.split > .card + .card{margin-top:0}
+.card h2{margin:0 0 14px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2 svg{color:var(--pri)}
+.split{display:grid;grid-template-columns:minmax(340px,430px) minmax(0,1fr);gap:20px;align-items:start}
+.split2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.split2 .card + .card{margin-top:0}
+label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+label.first{margin-top:0}
+input,select,textarea{font-size:16px;touch-action:manipulation}
+input,select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+input:hover,select:hover{border-color:#b9c9c4}
+input:focus,select:focus{outline:0;border-color:var(--pri);box-shadow:0 0 0 3px rgba(194,65,12,.15)}
+input[type=date]{display:block;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;min-height:47px;text-align:left;line-height:1.2}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+input[type=date]::-webkit-calendar-picker-indicator{margin:0 0 0 6px}
+input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--pri)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gridf{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
+.hint{font-size:13px;margin-top:6px;min-height:18px}
+.muted{color:var(--mut)}
+.note{font-size:12.5px;color:var(--mut);margin-top:6px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 15px;border:1px solid transparent;border-radius:10px;background:var(--pri);color:#fff;font-weight:700;cursor:pointer;transition:background .15s,transform .05s}
+.btn:hover{background:var(--pri-h)}.btn:active{transform:translateY(1px)}
+.btn.big{width:100%;padding:15px;font-size:16px;margin-top:20px;border-radius:12px}
+.btn.sm{padding:7px 11px;font-size:13.5px;border-radius:9px}
+.btn.sm svg.i{width:16px;height:16px}
+.btn.ok{background:var(--ok)}.btn.ok:hover{background:#0f6439}
+.btn.gray{background:#fff;color:var(--ink);border-color:var(--line)}.btn.gray:hover{background:var(--soft)}
+.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}.btn.ghost:hover{background:var(--soft)}
+.btn.ghost.bad{color:var(--bad)}.btn.ghost.bad:hover{background:var(--badbg);border-color:#f2b8c1}
+.btn.ghost.warn{color:var(--warn)}.btn.ghost.warn:hover{background:var(--warnbg);border-color:#efd08a}
+.btn:disabled{opacity:.5;pointer-events:none}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:12px;width:fit-content;max-width:100%}
+.chip{padding:8px 14px;border-radius:9px;border:0;background:none;font-weight:600;cursor:pointer;color:var(--mut)}
+.chip:hover{color:var(--ink)}
+.chip.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,33,31,.18)}
+
+.sw{position:relative}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(13,58,55,.18);overflow:hidden}
+.sugg div{padding:11px 14px;cursor:pointer;font-weight:600;border-bottom:1px solid var(--soft)}
+.sugg div.own{display:flex;align-items:center;gap:8px;background:#fbf3ee;color:var(--pri)}
+.sugg div.own svg.i{width:16px;height:16px}
+.sugg div:last-child{border:0}.sugg div:hover{background:var(--soft);color:var(--pri)}
+
+/* ---------- liste ---------- */
+.list{container-type:inline-size}
+.rowhead,.row{display:grid;grid-template-columns:minmax(0,1.5fr) 140px 56px 130px 150px minmax(0,1.2fr) 290px;gap:14px;align-items:center}
+.rowhead{padding:0 16px 8px;font-size:12.5px;font-weight:600;color:var(--mut)}
+.row{padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;transition:border-color .15s}
+.row:hover{border-color:#b6c8c3}
+.row.deleted{background:#fff6f7;border-color:#f3cdd3}
+.c-main{display:flex;gap:12px;align-items:center;min-width:0}
+.c-main .code{font-size:16px;font-weight:800;letter-spacing:-.01em;word-break:break-word}
+.c-main small{display:block;color:var(--mut);font-size:13px;margin-top:1px}
+.c-ubi,.c-who,.c-date{display:flex;align-items:center;gap:7px;color:var(--ink);min-width:0;flex-wrap:wrap}
+.c-ubi svg,.c-who svg,.c-date svg{color:var(--mut)}
+.c-date small{flex-basis:100%;color:var(--mut);font-size:12px;margin-left:25px;margin-top:-4px}
+.c-ubi{font-weight:600}.dash{color:#9db0aa}
+.c-qty b{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.c-qty::before{content:"Q.tà ";display:none;color:var(--mut);font-size:13px}
+.c-bd{display:flex;flex-wrap:wrap;gap:4px}
+.acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.bd{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:7px;font-size:12.5px;font-weight:700;background:#e6ecea;color:var(--ink);border:0;white-space:nowrap}
+.bd svg.i{width:13px;height:13px;stroke-width:2.4}
+.bd.warn{background:var(--warnbg);color:var(--warn)}.bd.ok{background:var(--okbg);color:var(--ok)}.bd.bad{background:var(--badbg);color:var(--bad)}.bd.info{background:var(--infobg);color:var(--info)}
+button.bd{cursor:pointer}button.bd:hover{filter:brightness(.96)}
+.hist{grid-column:1/-1;background:var(--soft);border-left:3px solid var(--pri);border-radius:8px;padding:10px 14px;font-size:14px}
+.hist div{padding:3px 0}
+.hist[hidden]{display:none}
+.sel{flex:0 0 auto}
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--mut);padding:36px 10px;text-align:center}
+.empty svg{width:34px;height:34px;stroke-width:1.5;color:#9db0aa}
+@container (max-width:1200px){
+  .rowhead{display:none}
+  .row{display:flex;flex-wrap:wrap;gap:8px 16px}
+  .c-main{order:0;flex:1 1 220px}
+  .acts{order:0}
+  .c-qty{order:1}.c-qty::before{display:inline}
+  .c-qty b{font-size:17px}
+  .c-ubi{order:2}.c-who{order:3}.c-date{order:4}
+  .c-date small{flex-basis:auto;margin:0}
+  .c-bd{order:5;flex:1 1 100%}
+  .hist{order:6;flex:1 1 100%}
+}
+
+/* ---------- statistiche ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:6px 0 16px}
+.kpi{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kpi span{font-size:13px;color:var(--mut)}
+.scroll{max-height:58vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+th{position:sticky;top:0;background:var(--soft);z-index:1;font-size:12.5px;color:var(--mut);font-weight:600}
+td.n,th.n{text-align:right}
+tr.clk{cursor:pointer}tr.clk:hover td{background:#fbf3ee}
+.bar2{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--pri),var(--glow));min-width:3px}
+
+/* ---------- impostazioni ---------- */
+.frow{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:8px 0;border-bottom:1px solid var(--soft)}
+.frow b{flex:1 1 110px}
+svg.lk{width:15px;height:15px;margin-left:6px;vertical-align:-2px;color:var(--ok)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--spruce);color:#fff;display:grid;place-items:center;font-weight:800}
+.drop{border:2px dashed #b6c8c3;border-radius:12px;padding:16px;background:var(--soft)}
+.drop input{background:transparent;border:0;padding:0}
+
+dialog{border:0;border-radius:18px;padding:24px;width:min(500px,94vw);box-shadow:0 24px 70px rgba(13,40,38,.4);color:var(--ink)}
+dialog::backdrop{background:rgba(13,40,38,.5)}
+dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;z-index:100;max-width:92vw;display:none;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+#toast.bad{background:var(--bad)}#toast.ok{background:var(--ok)}
+
+/* ---------- schermo stretto: barra in basso ---------- */
+@media(max-width:1100px){.split{grid-template-columns:1fr}.split2{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .app{display:block}
+  .side{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));gap:0;z-index:40;overflow:visible;box-shadow:0 -4px 20px rgba(0,0,0,.2)}
+  .brand,.grp{display:none}
+  .nav{flex:1;flex-direction:column;gap:2px;padding:6px 0;font-size:10.5px;text-align:center;justify-content:center;border-radius:9px;min-width:0}
+  .nav span:not(.cnt){white-space:nowrap}
+  .nav .lg{display:none}.nav .sm{display:inline}
+  .nav{font-size:10px;letter-spacing:-.01em}
+  .nav.on::before{display:none}
+  .nav .cnt{position:absolute;top:0;right:8px;margin:0;font-size:10px;padding:0 5px;min-width:16px}
+  .content{padding:0 12px 96px}
+  .topbar{flex-wrap:wrap;gap:8px 12px;padding:12px 0 10px}
+  .topbar h1{font-size:20px;flex:1 1 0;min-width:0;order:0}
+  #clock{order:1;min-width:0}#clock b{font-size:20px}
+  .sig{order:2;flex:1 1 100%}.sig .firme-bar{min-width:0;flex:1}
+  .card{padding:16px;border-radius:14px}
+  .cards{grid-template-columns:1fr}
+}
+@media print{.side,.topbar,.noprint,#toast{display:none!important}.app{display:block}body{background:#fff}.content{padding:0}.card{border:0;padding:0}.scroll{max-height:none;overflow:visible;border:0}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ ICONE SVG ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></symbol>
+<symbol id="i-checks" viewBox="0 0 24 24"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+<symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-sheet" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M10 9H8"/></symbol>
+<symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 7V4H6l6 8-6 8h12v-3"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+</defs></svg>
+
+<div class="app">
+<!-- ============ BARRA LATERALE ============ -->
+<aside class="side noprint">
+  <div class="brand">
+    <img class="logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLh8I2uPrMGje9O84uF-y4-tFpsCPWK12CY5LRiMZuq3Iw18yOX67-UMEf&s=10" alt="KOH-I-NOOR">
+    <div><b>KOH-I-NOOR</b><span>Articoli mancanti</span></div>
+  </div>
+
+  <div class="grp">Negozio</div>
+  <button class="nav on" data-view="m-ins"><svg class="i"><use href="#i-plus"/></svg><span>Inserimento</span></button>
+  <button class="nav" data-view="m-sc"><svg class="i"><use href="#i-checks"/></svg><span><span class="lg">Seconda spunta</span><span class="sm">Spunta</span></span><span class="cnt" id="cnt-sc" data-n="0"></span></button>
+  <button class="nav" data-view="cerca"><svg class="i"><use href="#i-search"/></svg><span>Ricerca</span></button>
+
+  <div class="grp">Responsabile</div>
+  <button class="nav" data-view="s-ver"><svg class="i"><use href="#i-clip"/></svg><span><span class="lg">Verifica</span><span class="sm">Verifica</span></span></button>
+  <button class="nav" data-view="s-stat"><svg class="i"><use href="#i-chart"/></svg><span><span class="lg">Statistiche</span><span class="sm">Stat.</span></span></button>
+  <button class="nav" data-view="s-cos"><svg class="i"><use href="#i-trash"/></svg><span>Cestino</span></button>
+  <button class="nav" data-view="s-set"><svg class="i"><use href="#i-sliders"/></svg><span><span class="lg">Impostazioni</span><span class="sm">Impost.</span></span></button>
+</aside>
+
+<div class="content">
+  <header class="topbar noprint">
+    <h1 id="vtitle">Inserimento articoli mancanti</h1>
+    <label class="sig" title="La mia firma" style="margin:0">
+      <svg class="i"><use href="#i-user"/></svg>
+      <div class="firme-bar"></div>
+    </label>
+    <div id="clock"></div>
+  </header>
+
+  <!-- ============ INSERIMENTO ============ -->
+  <section class="view on" id="v-m-ins">
+    <div class="split">
+      <div class="card">
+        <label class="first">Codice articolo</label>
+        <div><input id="f-cod" autocomplete="off" autocapitalize="characters" placeholder="Inizia a scrivere il codice…"></div>
+        <div class="hint" id="f-hint"></div>
+        <div class="grid2">
+          <div><label class="first">Ubicazione</label><input id="f-ubi" autocomplete="off" autocapitalize="characters" placeholder="es. A.01.01.01"></div>
+          <div><label class="first">Quantità mancante</label><input id="f-qty" type="number" inputmode="numeric" min="1" placeholder="0"></div>
+        </div>
+        <label>Data del foglio</label>
+        <input id="f-data" type="date">
+        <div class="note">La data reale dell'inserimento viene salvata separatamente, in automatico.</div>
+        <button class="btn big" id="f-save"><svg class="i"><use href="#i-check"/></svg>Salva</button>
+      </div>
+      <div class="card">
+        <h2><svg class="i"><use href="#i-clock"/></svg>Ultimi inseriti</h2>
+        <div class="list" id="recent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECONDA SPUNTA ============ -->
+  <section class="view" id="v-m-sc">
+    <div class="card">
+      <h2><svg class="i"><use href="#i-checks"/></svg>Richieste dal responsabile</h2>
+      <p class="muted" style="margin:0 0 14px">Controlla in negozio ogni articolo. Se la quantità non corrisponde, modificala, poi premi «Verificato».</p>
+      <div class="list" id="sc-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ RICERCA ============ -->
+  <section class="view" id="v-cerca">
+    <div class="card">
+      <div class="sw" style="max-width:560px">
+        <input id="q-cerca" autocomplete="off" placeholder="Cerca per codice articolo…" aria-label="Cerca per codice articolo">
+      </div>
+      <div class="hint muted" id="q-sum"></div>
+    </div>
+    <div class="list" id="cerca-list" style="margin-top:16px"></div>
+  </section>
+
+  <!-- ============ VERIFICA ============ -->
+  <section class="view" id="v-s-ver">
+    <div class="card">
+      <div class="chips" id="ver-chips"></div>
+      <div class="tools">
+        <button class="btn sm gray" id="ver-all"><svg class="i"><use href="#i-list"/></svg>Seleziona tutto</button>
+        <button class="btn sm ok" id="ver-conf"><svg class="i"><use href="#i-check"/></svg>Conferma selezione</button>
+        <button class="btn sm ghost warn" id="ver-sc"><svg class="i"><use href="#i-refresh"/></svg>Richiedi seconda spunta</button>
+      </div>
+      <div class="list" id="ver-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ STATISTICHE ============ -->
+  <section class="view" id="v-s-stat">
+    <div class="card">
+      <div class="gridf noprint">
+        <div><label class="first">Dal</label><input type="date" id="st-from"></div>
+        <div><label class="first">Al</label><input type="date" id="st-to"></div>
+        <div><label class="first">Firma</label><select id="st-firma"></select></div>
+        <div><label class="first">Il codice contiene</label><input id="st-cod" placeholder="facoltativo"></div>
+        <div><label class="first" style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><input type="checkbox" id="st-del"> Includi cestino</label></div>
+      </div>
+      <div class="tools noprint">
+        <button class="btn" id="st-go"><svg class="i"><use href="#i-search"/></svg>Applica</button>
+        <button class="btn gray" id="st-xls"><svg class="i"><use href="#i-download"/></svg>Esporta Excel</button>
+        <button class="btn gray" id="st-print"><svg class="i"><use href="#i-print"/></svg>Stampa</button>
+      </div>
+      <div class="cards" id="st-kpi"></div>
+      <div class="scroll" id="st-table"></div>
+    </div>
+  </section>
+
+  <!-- ============ CESTINO ============ -->
+  <section class="view" id="v-s-cos">
+    <div class="card">
+      <h2><svg class="i"><use href="#i-trash"/></svg>Articoli eliminati</h2>
+      <div class="list" id="cos-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ IMPOSTAZIONI ============ -->
+  <section class="view" id="v-s-set">
+    <div class="split2">
+      <div class="card">
+        <h2><svg class="i"><use href="#i-users"/></svg>Firme</h2>
+        <div id="set-firme"></div>
+        <div style="display:flex;gap:10px;align-items:flex-end;margin-top:14px">
+          <div style="flex:1"><label class="first">Nuova persona</label><input id="set-newfirma" placeholder="Nome"></div>
+          <button class="btn" id="set-addfirma"><svg class="i"><use href="#i-plus"/></svg>Aggiungi</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2><svg class="i"><use href="#i-sheet"/></svg>Elenco articoli</h2>
+        <p class="muted" id="set-count" style="margin:0 0 6px;font-weight:600"></p>
+        <p style="margin:0 0 12px;font-size:14px">Colonne: Cod Magazzino, Cod ubicazione, Articolo, Descrizione. Le righe senza articolo vengono ignorate. <b>L'importazione cancella tutto ciò che esiste e riscrive l'elenco.</b></p>
+        <div class="drop"><input type="file" id="set-file" accept=".xlsx,.xls"></div>
+        <div class="hint" id="set-status"></div>
+      </div>
+      <div class="card" style="grid-column:1/-1">
+        <h2><svg class="i"><use href="#i-lock"/></svg>Password parte del responsabile</h2>
+        <p class="muted" style="margin:0 0 8px;font-size:14px">Se attiva, per aprire Verifica, Statistiche, Cestino e Impostazioni serve la password. Le password delle singole firme si impostano nell'elenco «Firme».</p>
+        <div id="set-boss"></div>
+      </div>
+    </div>
+  </section>
+</div>
+</div>
+
+<dialog id="dlg">
+  <h2><svg class="i" style="color:var(--pri)"><use href="#i-pencil"/></svg>Modifica</h2>
+  <label>Codice articolo</label>
+  <div><input id="e-cod" autocomplete="off"></div>
+  <div class="grid2">
+    <div><label>Ubicazione</label><input id="e-ubi"></div>
+    <div><label>Quantità</label><input id="e-qty" type="number" inputmode="numeric" min="1"></div>
+  </div>
+  <label>Data del foglio</label>
+  <input id="e-data" type="date">
+  <label>Chi modifica</label>
+  <div class="firme-bar"></div>
+  <p class="note">Ogni modifica resta nella cronologia: chi, quando, valore vecchio e nuovo.</p>
+  <div class="grid2" style="margin-top:18px">
+    <button class="btn gray" id="e-cancel">Annulla</button>
+    <button class="btn" id="e-save"><svg class="i"><use href="#i-check"/></svg>Salva</button>
+  </div>
+</dialog>
+
+<dialog id="pwdlg">
+  <h2><svg class="i" style="color:var(--pri)"><use href="#i-lock"/></svg><span id="pw-title">Password</span></h2>
+  <p class="note" id="pw-msg" style="margin:0 0 4px"></p>
+  <label>Password</label>
+  <input id="pw-a" type="password" autocomplete="off">
+  <div id="pw-b-wrap"><label>Ripeti password</label><input id="pw-b" type="password" autocomplete="off"></div>
+  <div class="hint" id="pw-err" style="color:var(--bad)"></div>
+  <div class="grid2" style="margin-top:14px">
+    <button class="btn gray" id="pw-cancel">Annulla</button>
+    <button class="btn" id="pw-ok"><svg class="i"><use href="#i-check"/></svg>Conferma</button>
+  </div>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+
+/* ============ CONFIG ============ */
+const SUPABASE_URL = 'https://fndjrfieitieqzafhyzz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bHDKjiKAVHqW199ICw7i2g_O3olYMAr';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { heartbeatIntervalMs: 15000 } });
+const T_ART = 'kohinoor_articoli';
+const T_MAN = 'kohinoor_articolimancanti';
+const T_ACC = 'kohinoor_accessi';
+
+/* ============ UTILITÀ ============ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const pad = n => String(n).padStart(2, '0');
+const localDate = d => { d = d instanceof Date ? d : new Date(d); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const fmtD = s => { if (!s) return ''; const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
+const fmtDT = iso => { if (!iso) return ''; const d = new Date(iso); return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let toastT;
+function toast(msg, type = '') { const t = $('#toast'); t.textContent = msg; t.className = type; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', 3200); }
+function caps(inp) { inp.addEventListener('input', () => { const s = inp.selectionStart, e = inp.selectionEnd; inp.value = inp.value.toUpperCase(); try { inp.setSelectionRange(s, e); } catch (_) {} }); }
+async function fetchAll(make) {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await make().range(from, from + 999);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < 1000) break;
+  }
+  return out;
+}
+
+/* ============ OROLOGIO ============ */
+function tick() {
+  const n = new Date();
+  $('#clock').innerHTML = `<b>${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}</b>` +
+    n.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+tick(); setInterval(tick, 1000);
+
+/* ============ STATO ============ */
+let articoli = [];            // [{codice, descrizione}]
+let descMap = new Map();      // CODICE_MAIUSCOLO -> descrizione
+let ubiMap = new Map();       // CODICE_MAIUSCOLO -> ubicazione dall'elenco
+let codeMap = new Map();      // CODICE_MAIUSCOLO -> codice (come nell'elenco)
+let ubiList = [];             // ubicazioni distinte dall'elenco
+let userUbi = [];             // ubicazioni scritte da me nelle segnalazioni
+const natCmp = (a, b) => a.localeCompare(b, 'it', { numeric: true, sensitivity: 'base' });
+const allUbi = () => { const s = new Set(ubiList); return [...ubiList, ...userUbi.filter(u => !s.has(u))]; };
+function addUserUbi(u) { u = (u || '').trim().toUpperCase(); if (u && !userUbi.includes(u)) userUbi.push(u); }
+async function loadUserUbi() {
+  try {
+    const rows = await fetchAll(() => sb.from(T_MAN).select('ubicazione').eq('tipo', 'segnalazione').order('id'));
+    userUbi = [...new Set(rows.map(r => (r.ubicazione || '').trim().toUpperCase()).filter(Boolean))].sort(natCmp);
+  } catch (_) {}
+}
+let firme = [];               // [{id, name}]
+let firma = localStorage.getItem('kohinoor_firma') || null;
+let accessi = new Map();      // nome -> pw_hash ('__SEF__' = area responsabile)
+let accessiOk = true;         // false se la tabella kohinoor_accessi non esiste
+const unlocked = new Set(JSON.parse(sessionStorage.getItem('kohinoor_unlocked') || '[]'));
+const R = new Map();          // cache righe mostrate
+let verStato = 'nuovo';
+
+/* ============ FIRME ============ */
+async function loadFirme() {
+  await loadAccessi();
+  const { data, error } = await sb.from(T_MAN).select('id,firmatario').eq('tipo', 'firmatario').order('created_at');
+  if (error) { toast('Errore firme: ' + error.message, 'bad'); return; }
+  firme = data.map(r => ({ id: r.id, name: r.firmatario }));
+  if (firma && !firme.some(f => f.name === firma)) firma = null;
+  renderFirme();
+  const sel = $('#st-firma'), old = sel.value;
+  sel.innerHTML = '<option value="">Tutte</option>' + firme.map(f => `<option>${esc(f.name)}</option>`).join('');
+  sel.value = old;
+}
+function renderFirme() {
+  const html = firme.length
+    ? `<select class="firme-sel"><option value="">— scegli la firma —</option>${firme.map(f => `<option value="${esc(f.name)}" ${f.name === firma ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}</select>`
+    : '<span class="muted">Aggiungi le firme in Responsabile → Impostazioni</span>';
+  $$('.firme-bar').forEach(el => el.innerHTML = html);
+}
+document.addEventListener('change', async e => {
+  const s = e.target.closest('.firme-sel'); if (!s) return;
+  const nf = s.value || null;
+  if (nf && accessi.has(nf) && !unlocked.has(nf)) {
+    const ok = await pwDialog({ title: 'Password', msg: `Inserisci la password per «${nf}»`, verify: pw => checkPw(pw, accessi.get(nf)) });
+    if (!ok) { $$('.firme-sel').forEach(x => x.value = firma || ''); return; }
+    unlocked.add(nf); saveUnl();
+  }
+  firma = nf;
+  if (firma) localStorage.setItem('kohinoor_firma', firma); else localStorage.removeItem('kohinoor_firma');
+  $$('.firme-sel').forEach(x => x.value = firma || '');
+});
+function needFirma() { if (!firma) { toast('Scegli prima la firma', 'bad'); return null; } return firma; }
+
+/* ============ ELENCO ARTICOLI ============ */
+async function loadArticoli() {
+  const { count, error } = await sb.from(T_ART).select('id', { count: 'exact', head: true });
+  if (error) { toast('Errore articoli: ' + error.message, 'bad'); return; }
+  const pages = Math.ceil((count || 0) / 1000);
+  const parts = await Promise.all(Array.from({ length: pages }, (_, i) =>
+    sb.from(T_ART).select('codice,descrizione,ubicazione').order('id').range(i * 1000, i * 1000 + 999).then(r => { if (r.error) throw r.error; return r.data; })));
+  articoli = parts.flat();
+  descMap = new Map(); codeMap = new Map(); ubiMap = new Map();
+  for (const a of articoli) { const u = a.codice.toUpperCase(); descMap.set(u, a.descrizione || ''); codeMap.set(u, a.codice); ubiMap.set(u, (a.ubicazione || '').toUpperCase()); }
+  ubiList = [...new Set(ubiMap.values())].filter(Boolean).sort(natCmp);
+  $('#set-count').textContent = `Articoli nel sistema: ${articoli.length.toLocaleString('it-IT')}`;
+}
+function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt = {}) {
+  const wrap = document.createElement('div'); wrap.className = 'sw';
+  inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+  const box = document.createElement('div'); box.className = 'sugg'; box.hidden = true; wrap.appendChild(box);
+  const check = () => {
+    const v = inp.value.trim().toUpperCase();
+    const known = codeMap.has(v);
+    if (!hintEl) return;
+    if (!v || !articoli.length) hintEl.innerHTML = '';
+    else if (known) hintEl.innerHTML = '<span style="color:var(--ok)">✓ articolo presente nell\'elenco</span>';
+    else hintEl.innerHTML = '<span style="color:var(--warn)">⚠ non è nell\'elenco</span>';
+  };
+  inp.addEventListener('input', () => {
+    const q = inp.value.trim().toLowerCase(); check();
+    if (!q) { box.hidden = true; return; }
+    const m = [];
+    for (const v of src()) {
+      const c = v.toLowerCase(), i = c.indexOf(q);
+      if (opt.prefix ? i === 0 : i >= 0) m.push({ c: v, g: c === q ? 0 : i === 0 ? 1 : 2, i });
+    }
+    const cmp = (x, y) => x.c.localeCompare(y.c, 'it', { numeric: true, sensitivity: 'base' });
+    if (!opt.prefix) m.sort((x, y) => x.g - y.g || x.i - y.i || cmp(x, y));
+    if (opt.first) {
+      const p = (opt.first() || '').toUpperCase();
+      if (p && p.toLowerCase().startsWith(q)) {
+        const k = m.findIndex(x => x.c.toUpperCase() === p);
+        if (k >= 0) m.splice(k, 1);
+        m.unshift({ c: p, own: true });
+      }
+    }
+    const list = m.slice(0, 8);
+    box.innerHTML = list.map(x => `<div data-v="${esc(x.c)}"${x.own ? ' class="own" title="Ubicazione dell\'articolo"' : ''}>${x.own ? '<svg class="i"><use href="#i-box"/></svg>' : ''}${esc(x.c)}</div>`).join('');
+    box.hidden = !list.length;
+  });
+  box.addEventListener('pointerdown', e => {
+    const d = e.target.closest('div'); if (!d) return; e.preventDefault();
+    inp.value = d.dataset.v; box.hidden = true; check();
+  });
+  inp.addEventListener('blur', () => setTimeout(() => box.hidden = true, 150));
+}
+
+/* ============ RIGHE ============ */
+const LAB = { codice: 'Codice', ubicazione: 'Ubicazione', quantita: 'Quantità', firmatario: 'Firma', data_foglio: 'Data foglio', eliminato: 'Eliminato' };
+function histHTML(r) {
+  const h = r.storico || [];
+  let q0 = r.quantita;
+  const fq = h.flatMap(e => e.cambi).find(c => c.campo === 'quantita'); if (fq) q0 = fq.da;
+  let s = `<div><b>Inserito:</b> ${fmtDT(r.created_at)} · ${esc(r.firmatario)} · quantità iniziale <b>-${q0}</b></div>`;
+  for (const e of h) {
+    s += `<div>✎ ${fmtDT(e.quando)} · ${esc(e.chi || '?')}: ` + e.cambi.map(c => {
+      if (c.campo === 'eliminato') return c.a ? 'spostato nel cestino' : 'ripristinato dal cestino';
+      const f = x => c.campo === 'data_foglio' ? fmtD(x) : c.campo === 'quantita' ? '-' + esc(x) : esc(x ?? '—');
+      return `${LAB[c.campo] || c.campo}: <b>${f(c.da)}</b> → <b>${f(c.a)}</b>`;
+    }).join('; ') + '</div>';
+  }
+  if (r.sc_richiesto_il) s += `<div>↻ Seconda spunta richiesta: ${fmtDT(r.sc_richiesto_il)}</div>`;
+  if (r.sc_fatto_il) s += `<div>✔ Seconda spunta eseguita: ${fmtDT(r.sc_fatto_il)} da ${esc(r.sc_fatto_da || '?')}</div>`;
+  if (r.confermato_il) s += `<div>✓ Confermato dal responsabile: ${fmtDT(r.confermato_il)}</div>`;
+  if (r.eliminato_il) s += `<div>🗑 Nel cestino dal: ${fmtDT(r.eliminato_il)}</div>`;
+  return s;
+}
+const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+function rowHTML(r, ctx) {
+  R.set(r.id, r);
+  const boss = ctx === 'ver' || ctx === 'trash';
+  const desc = boss ? (descMap.get((r.codice || '').toUpperCase()) || '') : '';
+  const retro = r.data_foglio !== localDate(r.created_at);
+  const st = { nuovo: ['Nuovo', ''], sc_richiesta: ['Seconda spunta richiesta', 'warn'], sc_fatta: ['Seconda spunta eseguita', 'info'], confermato: ['Confermato', 'ok'] }[r.stato] || ['', ''];
+  let b = '';
+  if (r.eliminato) b += `<span class="bd bad">${ic('trash')}Eliminato</span>`;
+  b += `<span class="bd ${st[1]}">${r.stato === 'confermato' ? ic('check') : ''}${st[0]}</span>`;
+  if (r.modificato_n > 0) b += `<button class="bd bad" data-act="hist" title="Vedi la cronologia delle modifiche">${ic('pencil')}Modificato ×${r.modificato_n}</button>`;
+  if (retro) b += `<span class="bd warn" title="La data del foglio (${fmtD(r.data_foglio)}) è diversa dalla data di inserimento (${fmtD(localDate(r.created_at))})">${ic('alert')}Altra data</span>`;
+  const btn = (a, icon, t, c = '') => `<button class="btn sm ${c}" data-act="${a}" title="${t}">${ic(icon)}<span>${t}</span></button>`;
+  let a = '';
+  if (ctx === 'ins') a = btn('edit', 'pencil', 'Modifica', 'ghost') + btn('del', 'trash', 'Elimina', 'ghost bad');
+  if (ctx === 'sc') a = btn('edit', 'pencil', 'Modifica', 'ghost') + btn('verify', 'check', 'Verificato', 'ok');
+  if (ctx === 'cerca' && !r.eliminato) a = btn('edit', 'pencil', 'Modifica', 'ghost') + btn('del', 'trash', 'Elimina', 'ghost bad');
+  if (ctx === 'ver') {
+    if (r.stato !== 'sc_richiesta' && r.stato !== 'confermato') a += btn('sc', 'refresh', 'Seconda spunta', 'ghost warn');
+    if (r.stato !== 'confermato') a += btn('confirm', 'check', 'Conferma', 'ok');
+  }
+  if (ctx === 'trash') a = btn('restore', 'undo', 'Ripristina', 'ghost');
+  const hasHist = (r.storico && r.storico.length) || r.sc_fatto_il || r.confermato_il || r.sc_richiesto_il || r.eliminato_il;
+  if (hasHist && r.modificato_n === 0) b += `<button class="bd" data-act="hist" title="Vedi la cronologia">${ic('clock')}Cronologia</button>`;
+  return `<div class="row ${r.eliminato ? 'deleted' : ''}" data-id="${r.id}">
+    <div class="c-main">${ctx === 'ver' ? '<input type="checkbox" class="sel" aria-label="Seleziona">' : ''}<div><b class="code">${esc(r.codice)}</b>${desc ? `<small>${esc(desc)}</small>` : ''}</div></div>
+    <div class="c-ubi">${r.ubicazione ? ic('pin') + esc(r.ubicazione) : '<span class="dash">—</span>'}</div>
+    <div class="c-qty"><b>-${r.quantita}</b></div>
+    <div class="c-who">${ic('user')}${esc(r.firmatario)}</div>
+    <div class="c-date">${ic('cal')}${fmtD(r.data_foglio)}<small>inserito ${fmtDT(r.created_at)}</small></div>
+    <div class="c-bd">${b}</div>
+    <div class="acts">${a}</div>
+    <div class="hist" hidden></div>
+  </div>`;
+}
+const emptyMsg = t => `<div class="empty">${ic('box')}<div>${t}</div></div>`;
+const HEAD = '<div class="rowhead"><div>Articolo</div><div>Ubicazione</div><div>Q.tà</div><div>Firma</div><div>Data foglio</div><div>Stato</div><div></div></div>';
+function renderList(el, rows, ctx, msg) { el.innerHTML = rows.length ? HEAD + rows.map(r => rowHTML(r, ctx)).join('') : emptyMsg(msg || 'Niente da mostrare'); }
+
+/* ============ AZIONI SULLE RIGHE ============ */
+async function upd(id, patch) {
+  const { error } = await sb.from(T_MAN).update(patch).eq('id', id);
+  if (error) { toast(error.message, 'bad'); return false; }
+  return true;
+}
+let editRow = null;
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const rowEl = b.closest('.row'); const r = R.get(rowEl.dataset.id); if (!r) return;
+  const act = b.dataset.act;
+  if (act === 'hist') {
+    const h = $('.hist', rowEl); h.hidden = !h.hidden; if (!h.hidden) h.innerHTML = histHTML(r); return;
+  }
+  if (act === 'edit') {
+    editRow = r; $('#e-cod').value = r.codice; $('#e-ubi').value = r.ubicazione || ''; $('#e-qty').value = r.quantita; $('#e-data').value = r.data_foglio;
+    renderFirme(); $('#dlg').showModal(); return;
+  }
+  if (act === 'del') {
+    const f = needFirma(); if (!f) return;
+    if (!confirm(`Spostare nel cestino ${r.codice} (q.tà -${r.quantita})?`)) return;
+    if (await upd(r.id, { eliminato: true, modificato_da: f })) { toast('Spostato nel cestino', 'ok'); refresh(); }
+  }
+  if (act === 'restore') { if (await upd(r.id, { eliminato: false, modificato_da: 'Responsabile' })) { toast('Ripristinato', 'ok'); refresh(); } }
+  if (act === 'verify') {
+    const f = needFirma(); if (!f) return;
+    if (await upd(r.id, { stato: 'sc_fatta', sc_fatto_da: f })) { toast('Seconda spunta registrata', 'ok'); refresh(); }
+  }
+  if (act === 'confirm') { if (await upd(r.id, { stato: 'confermato' })) { toast('Confermato', 'ok'); refresh(); } }
+  if (act === 'sc') { if (await upd(r.id, { stato: 'sc_richiesta' })) { toast('Seconda spunta richiesta', 'ok'); refresh(); } }
+});
+
+/* ---- finestra di modifica ---- */
+$('#e-cancel').onclick = () => $('#dlg').close();
+$('#e-save').onclick = async () => {
+  const f = needFirma(); if (!f || !editRow) return;
+  const codice = $('#e-cod').value.trim(), ubic = $('#e-ubi').value.trim().toUpperCase(), q = parseInt($('#e-qty').value, 10), d = $('#e-data').value;
+  if (!codice || !(q > 0) || !d) return toast('Compila codice, quantità e data', 'bad');
+  const patch = {};
+  const canon = codeMap.get(codice.toUpperCase()) || codice;
+  if (canon !== editRow.codice) patch.codice = canon;
+  if (ubic !== (editRow.ubicazione || '')) patch.ubicazione = ubic;
+  if (q !== editRow.quantita) patch.quantita = q;
+  if (d !== editRow.data_foglio) patch.data_foglio = d;
+  if (!Object.keys(patch).length) { $('#dlg').close(); return; }
+  patch.modificato_da = f;
+  if (await upd(editRow.id, patch)) { addUserUbi(ubic); $('#dlg').close(); toast('Modifica salvata (compare nella cronologia)', 'ok'); refresh(); }
+};
+
+/* ============ INSERIMENTO ============ */
+async function saveIns() {
+  const f = needFirma(); if (!f) return;
+  let codice = $('#f-cod').value.trim(); const ubic = $('#f-ubi').value.trim().toUpperCase();
+  const q = parseInt($('#f-qty').value, 10), d = $('#f-data').value;
+  if (!codice) return toast('Scrivi il codice dell\'articolo', 'bad');
+  if (!(q > 0)) return toast('Scrivi la quantità', 'bad');
+  if (!d) return toast('Scegli la data', 'bad');
+  const known = codeMap.get(codice.toUpperCase());
+  if (known) codice = known;
+  else if (articoli.length && !confirm(`«${codice}» non è nell'elenco articoli. Salvare comunque?`)) return;
+  const btn = $('#f-save'); btn.disabled = true;
+  const { error } = await sb.from(T_MAN).insert({ tipo: 'segnalazione', codice, ubicazione: ubic, quantita: q, firmatario: f, data_foglio: d, modificato_da: f });
+  btn.disabled = false;
+  if (error) return toast(error.message, 'bad');
+  toast('Salvato ✓', 'ok'); addUserUbi(ubic);
+  $('#f-cod').value = ''; $('#f-ubi').value = ''; $('#f-qty').value = ''; $('#f-data').value = localDate(new Date()); $('#f-hint').innerHTML = '';
+  $('#f-cod').focus(); loadRecent(); loadCounts();
+}
+$('#f-save').onclick = saveIns;
+$('#f-qty').addEventListener('keydown', e => { if (e.key === 'Enter') saveIns(); });
+
+async function loadRecent() {
+  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).order('created_at', { ascending: false }).limit(10);
+  if (error) return toast(error.message, 'bad');
+  renderList($('#recent'), data, 'ins', 'Nessuna registrazione per ora');
+}
+async function loadSc() {
+  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', 'sc_richiesta').order('created_at');
+  if (error) return toast(error.message, 'bad');
+  renderList($('#sc-list'), data, 'sc', 'Nessuna seconda spunta richiesta 🎉');
+}
+async function loadCounts() {
+  const { count } = await sb.from(T_MAN).select('id', { count: 'exact', head: true }).eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', 'sc_richiesta');
+  const el = $('#cnt-sc'); el.dataset.n = count || 0; el.textContent = count || '';
+}
+
+/* ============ RICERCA ============ */
+let qT;
+$('#q-cerca').addEventListener('input', () => { clearTimeout(qT); qT = setTimeout(doSearch, 300); });
+async function doSearch() {
+  const q = $('#q-cerca').value.trim().replace(/[%,()*_]/g, '');
+  if (!q) { $('#cerca-list').innerHTML = ''; $('#q-sum').textContent = 'Scrivi un codice per vedere la cronologia.'; return; }
+  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').ilike('codice', `%${q}%`).order('created_at', { ascending: false }).limit(300);
+  if (error) return toast(error.message, 'bad');
+  const act = data.filter(r => !r.eliminato);
+  const days = new Set(act.map(r => r.data_foglio)).size;
+  $('#q-sum').textContent = data.length ? `${act.length} segnalazioni attive in ${days} giorni diversi · ${data.length - act.length} nel cestino · ${data.filter(r => r.modificato_n > 0).length} modificate` : '';
+  renderList($('#cerca-list'), data, 'cerca', 'Nessun risultato');
+}
+
+/* ============ RESPONSABILE · VERIFICA ============ */
+const STATI = [['nuovo', 'Nuovi'], ['sc_richiesta', 'Seconda spunta richiesta'], ['sc_fatta', 'Seconda spunta eseguita'], ['confermato', 'Confermati']];
+async function loadVer() {
+  const counts = await Promise.all(STATI.map(([s]) => sb.from(T_MAN).select('id', { count: 'exact', head: true }).eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', s).then(r => r.count || 0)));
+  $('#ver-chips').innerHTML = STATI.map(([s, l], i) => `<button class="chip ${s === verStato ? 'on' : ''}" data-ver="${s}">${l} (${counts[i]})</button>`).join('');
+  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', verStato).order('created_at', { ascending: false }).limit(200);
+  if (error) return toast(error.message, 'bad');
+  renderList($('#ver-list'), data, 'ver', 'Niente in questa categoria');
+}
+document.addEventListener('click', e => { const c = e.target.closest('[data-ver]'); if (c) { verStato = c.dataset.ver; loadVer(); } });
+$('#ver-all').onclick = () => { const cb = $$('#ver-list .sel'); const all = cb.every(x => x.checked); cb.forEach(x => x.checked = !all); };
+async function bulk(stato) {
+  const ids = $$('#ver-list .sel:checked').map(x => x.closest('.row').dataset.id);
+  if (!ids.length) return toast('Seleziona almeno una riga', 'bad');
+  const { error } = await sb.from(T_MAN).update({ stato }).in('id', ids);
+  if (error) return toast(error.message, 'bad');
+  toast(`${ids.length} righe aggiornate`, 'ok'); refresh();
+}
+$('#ver-conf').onclick = () => bulk('confermato');
+$('#ver-sc').onclick = () => bulk('sc_richiesta');
+
+/* ============ RESPONSABILE · STATISTICHE ============ */
+let statRows = [], statTop = [];
+async function loadStat() {
+  if (!$('#st-from').value) { const d = new Date(); d.setDate(d.getDate() - 30); $('#st-from').value = localDate(d); $('#st-to').value = localDate(new Date()); }
+  $('#st-table').innerHTML = emptyMsg('Caricamento…');
+  const from = $('#st-from').value, to = $('#st-to').value, fi = $('#st-firma').value, cod = $('#st-cod').value.trim().replace(/[%,()*_]/g, ''), del = $('#st-del').checked;
+  try {
+    statRows = await fetchAll(() => {
+      let q = sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').order('created_at', { ascending: false });
+      if (from) q = q.gte('data_foglio', from); if (to) q = q.lte('data_foglio', to);
+      if (fi) q = q.eq('firmatario', fi); if (cod) q = q.ilike('codice', `%${cod}%`);
+      if (!del) q = q.eq('eliminato', false);
+      return q;
+    });
+  } catch (err) { return toast(err.message, 'bad'); }
+  const m = new Map();
+  for (const r of statRows) {
+    const x = m.get(r.codice) || { codice: r.codice, n: 0, qty: 0, last: '' };
+    x.n++; x.qty += r.quantita; if (r.data_foglio > x.last) x.last = r.data_foglio; m.set(r.codice, x);
+  }
+  statTop = [...m.values()].sort((a, b) => b.n - a.n || b.qty - a.qty);
+  const tot = statRows.reduce((s, r) => s + r.quantita, 0), max = statTop[0]?.n || 1;
+  $('#st-kpi').innerHTML = `<div class="kpi"><b>${statRows.length}</b><span>segnalazioni</span></div><div class="kpi"><b>-${tot}</b><span>quantità totale</span></div><div class="kpi"><b>${statTop.length}</b><span>articoli distinti</span></div>`;
+  $('#st-table').innerHTML = statTop.length ? `<table><thead><tr><th>#</th><th>Articolo</th><th class="n">Volte</th><th class="n">Q.tà</th><th>Ultima</th><th style="width:25%"></th></tr></thead><tbody>` +
+    statTop.map((x, i) => `<tr class="clk" data-goto="${esc(x.codice)}"><td>${i + 1}</td><td><b>${esc(x.codice)}</b><br><span class="muted">${esc(descMap.get(x.codice.toUpperCase()) || '')}</span></td><td class="n"><b>${x.n}</b></td><td class="n">-${x.qty}</td><td>${fmtD(x.last)}</td><td><div class="bar2" style="width:${Math.round(x.n / max * 100)}%"></div></td></tr>`).join('') + '</tbody></table>'
+    : emptyMsg('Nessuna registrazione per i filtri scelti');
+}
+$('#st-go').onclick = loadStat;
+$('#st-print').onclick = () => window.print();
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-goto]'); if (!t) return;
+  $('#q-cerca').value = t.dataset.goto; goView('cerca');
+});
+$('#st-xls').onclick = () => {
+  if (!statRows.length) return toast('Niente da esportare', 'bad');
+  const stati = { nuovo: 'Nuovo', sc_richiesta: 'Seconda spunta richiesta', sc_fatta: 'Seconda spunta eseguita', confermato: 'Confermato' };
+  const s1 = statTop.map((x, i) => ({ '#': i + 1, Articolo: x.codice, Descrizione: descMap.get(x.codice.toUpperCase()) || '', 'N. segnalazioni': x.n, 'Quantità totale': -x.qty, 'Ultima data': fmtD(x.last) }));
+  const s2 = statRows.map(r => ({ 'Data foglio': fmtD(r.data_foglio), 'Inserito il': fmtDT(r.created_at), Articolo: r.codice, Descrizione: descMap.get((r.codice || '').toUpperCase()) || '', Ubicazione: r.ubicazione || '', Quantità: -r.quantita, Firma: r.firmatario, Stato: stati[r.stato] || r.stato, 'N. modifiche': r.modificato_n, Eliminato: r.eliminato ? 'SÌ' : '' }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s1), 'Statistiche');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s2), 'Dettagli');
+  XLSX.writeFile(wb, `kohinoor_${localDate(new Date())}.xlsx`);
+};
+
+/* ============ RESPONSABILE · CESTINO ============ */
+async function loadTrash() {
+  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', true).order('eliminato_il', { ascending: false }).limit(200);
+  if (error) return toast(error.message, 'bad');
+  renderList($('#cos-list'), data, 'trash', 'Il cestino è vuoto');
+}
+
+/* ============ RESPONSABILE · IMPOSTAZIONI ============ */
+async function loadSet() {
+  await loadFirme();
+  $('#set-firme').innerHTML = firme.length ? firme.map(f => `<div class="frow"><span class="av">${esc(f.name.trim().charAt(0).toUpperCase())}</span><b>${esc(f.name)}${accessi.has(f.name) ? '<svg class="i lk"><use href="#i-lock"/></svg>' : ''}</b>${pwBtns(f.name)}<button class="btn sm ghost bad" data-delfirma="${f.id}" data-name="${esc(f.name)}">${ic('trash')}<span>Elimina</span></button></div>`).join('') : emptyMsg('Nessuna firma');
+  renderBoss();
+  $('#set-count').textContent = `Articoli nel sistema: ${articoli.length.toLocaleString('it-IT')}`;
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-delfirma]'); if (!b) return;
+  if (!confirm(`Eliminare la firma «${b.dataset.name}»? Le registrazioni precedenti restano invariate.`)) return;
+  const { error } = await sb.from(T_MAN).delete().eq('id', b.dataset.delfirma);
+  if (error) return toast(error.message, 'bad');
+  if (accessiOk) await sb.from(T_ACC).delete().eq('nome', b.dataset.name);
+  loadSet();
+});
+$('#set-addfirma').onclick = async () => {
+  const name = $('#set-newfirma').value.trim(); if (!name) return;
+  const { error } = await sb.from(T_MAN).insert({ tipo: 'firmatario', firmatario: name });
+  if (error) return toast(error.code === '23505' ? 'Questa firma esiste già' : error.message, 'bad');
+  $('#set-newfirma').value = ''; loadSet();
+};
+$('#set-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  const st = $('#set-status');
+  try {
+    st.textContent = 'Leggo il file…';
+    const wb = XLSX.read(await file.arrayBuffer());
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+    if (!rows.length) throw new Error('Il file è vuoto');
+    const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const keys = {}; Object.keys(rows[0]).forEach(k => keys[norm(k)] = k);
+    const kc = keys.articolo || keys.codice;
+    if (!kc) throw new Error('Non trovo la colonna «Articolo»');
+    const kd = keys.descrizione, ku = keys.codubicazione || keys.ubicazione, km = keys.codmagazzino;
+    const val = (r, k) => k ? String(r[k] ?? '').trim() : '';
+    const seen = new Set(), out = []; let skipped = 0;
+    for (const r of rows) {
+      const c = val(r, kc); if (!c) { skipped++; continue; }
+      if (seen.has(c.toUpperCase())) continue; seen.add(c.toUpperCase());
+      out.push({ codice: c, descrizione: val(r, kd), ubicazione: val(r, ku).toUpperCase(), cod_magazzino: val(r, km) });
+    }
+    if (!out.length) throw new Error('Non ho trovato nessun articolo nel file');
+    if (!confirm(`Verranno cancellati i ${articoli.length} articoli attuali e caricati ${out.length} dal file (${skipped} righe senza articolo ignorate). Continuare?`)) { e.target.value = ''; st.textContent = ''; return; }
+    st.textContent = 'Cancello il vecchio elenco…';
+    let r = await sb.from(T_ART).delete().gt('id', 0); if (r.error) throw r.error;
+    for (let i = 0; i < out.length; i += 1000) {
+      st.textContent = `Carico… ${Math.min(i + 1000, out.length)} / ${out.length}`;
+      r = await sb.from(T_ART).insert(out.slice(i, i + 1000)); if (r.error) throw r.error;
+    }
+    await loadArticoli(); loadSet();
+    st.innerHTML = `<span style="color:var(--ok)">✓ Fatto: ${out.length} articoli caricati</span>`;
+  } catch (err) { st.innerHTML = `<span style="color:var(--bad)">Errore: ${esc(err.message)}. Riprova l'importazione.</span>`; }
+  e.target.value = '';
+});
+
+/* ============ PASSWORD ============ */
+const toHex = buf => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+const fromHex = h => new Uint8Array(h.match(/../g).map(x => parseInt(x, 16)));
+async function hashPw(pw, salt) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  return toHex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256));
+}
+async function makePw(pw) { const salt = crypto.getRandomValues(new Uint8Array(16)); return toHex(salt) + ':' + await hashPw(pw, salt); }
+async function checkPw(pw, stored) {
+  try { const [s, h] = stored.split(':'); return (await hashPw(pw, fromHex(s))) === h; } catch (_) { return false; }
+}
+const saveUnl = () => sessionStorage.setItem('kohinoor_unlocked', JSON.stringify([...unlocked]));
+async function loadAccessi() {
+  const { data, error } = await sb.from(T_ACC).select('nome,pw_hash');
+  if (error) { accessiOk = false; return; }
+  accessiOk = true; accessi = new Map(data.map(r => [r.nome, r.pw_hash]));
+  if (firma && accessi.has(firma) && !unlocked.has(firma)) { firma = null; localStorage.removeItem('kohinoor_firma'); renderFirme(); }
+}
+function pwDialog({ title, msg, again, verify }) {
+  return new Promise(res => {
+    const d = $('#pwdlg'), a = $('#pw-a'), b = $('#pw-b'), err = $('#pw-err');
+    $('#pw-title').textContent = title; $('#pw-msg').textContent = msg || '';
+    a.value = ''; b.value = ''; err.textContent = ''; $('#pw-b-wrap').hidden = !again;
+    let done = false;
+    const fin = v => { if (done) return; done = true; d.close(); res(v); };
+    $('#pw-ok').onclick = async () => {
+      if (!a.value) { err.textContent = 'Scrivi la password'; return; }
+      if (again && a.value !== b.value) { err.textContent = 'Le password non coincidono'; return; }
+      if (verify && !(await verify(a.value))) { err.textContent = 'Password errata'; a.value = ''; a.focus(); return; }
+      fin(a.value);
+    };
+    $('#pw-cancel').onclick = () => fin(null);
+    d.onclose = () => fin(null);
+    a.onkeydown = b.onkeydown = ev => { if (ev.key === 'Enter') $('#pw-ok').click(); };
+    d.showModal(); a.focus();
+  });
+}
+async function unlockBoss() {
+  if (unlocked.has('__SEF__')) return true;
+  await loadAccessi();
+  const h = accessi.get('__SEF__');
+  if (!h) return true;
+  const ok = await pwDialog({ title: 'Area responsabile', msg: 'Inserisci la password per continuare', verify: pw => checkPw(pw, h) });
+  if (!ok) return false;
+  unlocked.add('__SEF__'); saveUnl(); return true;
+}
+function pwBtns(name) {
+  const lk = accessi.has(name), n = esc(name);
+  return `<button class="btn sm ghost" data-setpw="${n}">${ic('lock')}<span>${lk ? 'Cambia' : 'Password'}</span></button>` +
+    (lk ? `<button class="btn sm ghost warn" data-rmpw="${n}">${ic('x')}<span>Disattiva</span></button>` : '');
+}
+function renderBoss() {
+  const el = $('#set-boss'); if (!el) return;
+  if (!accessiOk) { el.innerHTML = '<div class="hint" style="color:var(--bad)">Per usare le password serve la tabella «kohinoor_accessi» nel database.</div>'; return; }
+  const lk = accessi.has('__SEF__');
+  el.innerHTML = `<div class="frow"><b>${lk ? 'Protetta con password<svg class="i lk"><use href="#i-lock"/></svg>' : 'Nessuna password'}</b>${pwBtns('__SEF__')}${lk ? `<button class="btn sm ghost" data-bosslock>${ic('lock')}<span>Blocca ora</span></button>` : ''}</div>`;
+}
+async function setPw(name, label) {
+  if (!accessiOk) return toast('Manca la tabella kohinoor_accessi nel database', 'bad');
+  if (!window.crypto || !crypto.subtle) return toast('Le password richiedono una connessione sicura (https)', 'bad');
+  const pw = await pwDialog({ title: 'Imposta password', msg: label, again: true });
+  if (!pw) return;
+  const { error } = await sb.from(T_ACC).upsert({ nome: name, pw_hash: await makePw(pw) });
+  if (error) return toast(error.message, 'bad');
+  if (name === '__SEF__' || name === firma) { unlocked.add(name); saveUnl(); }
+  toast('Password salvata', 'ok'); loadSet();
+}
+async function rmPw(name, label) {
+  if (!confirm(`Disattivare la password per ${label}?`)) return;
+  const { error } = await sb.from(T_ACC).delete().eq('nome', name);
+  if (error) return toast(error.message, 'bad');
+  unlocked.delete(name); saveUnl(); toast('Password disattivata', 'ok'); loadSet();
+}
+document.addEventListener('click', e => {
+  const s = e.target.closest('[data-setpw]'), r = e.target.closest('[data-rmpw]'), l = e.target.closest('[data-bosslock]');
+  const lab = n => n === '__SEF__' ? 'la parte del responsabile' : `«${n}»`;
+  if (s) setPw(s.dataset.setpw, lab(s.dataset.setpw));
+  else if (r) rmPw(r.dataset.rmpw, lab(r.dataset.rmpw));
+  else if (l) { unlocked.delete('__SEF__'); saveUnl(); toast('Area responsabile bloccata', 'ok'); goView('m-ins'); }
+});
+
+/* ============ NAVIGAZIONE ============ */
+const LOAD = { 'm-ins': loadRecent, 'm-sc': loadSc, 'cerca': doSearch, 's-ver': loadVer, 's-stat': loadStat, 's-cos': loadTrash, 's-set': loadSet };
+const TITLES = { 'm-ins': 'Inserimento articoli mancanti', 'm-sc': 'Seconda spunta', 'cerca': 'Ricerca e cronologia', 's-ver': 'Verifica', 's-stat': 'Statistiche', 's-cos': 'Cestino', 's-set': 'Impostazioni' };
+let curView = 'm-ins';
+async function goView(id) {
+  if (id.startsWith('s-') && !(await unlockBoss())) return;
+  curView = id;
+  $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + id));
+  $$('[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === id));
+  $('#vtitle').textContent = TITLES[id];
+  LOAD[id]();
+  if (id === 'cerca') $('#q-cerca').focus();
+  window.scrollTo(0, 0);
+}
+document.addEventListener('click', e => { const v = e.target.closest('[data-view]'); if (v) goView(v.dataset.view); });
+function refresh() { LOAD[curView](); loadCounts(); }
+
+/* ============ TEMPO REALE ============ */
+let rtT, rtArtT;
+async function liveRefresh() {
+  if ($('#dlg').open || $('#pwdlg').open) return;
+  loadAccessi();
+  const scope = '#v-' + curView + ' ';
+  const checked = $$('#ver-list .sel:checked').map(x => x.closest('.row').dataset.id);
+  const opened = $$(scope + '.hist:not([hidden])').map(h => h.closest('.row').dataset.id);
+  await Promise.all([LOAD[curView](), loadCounts()]);
+  checked.forEach(id => { const cb = $(`#ver-list .row[data-id="${id}"] .sel`); if (cb) cb.checked = true; });
+  opened.forEach(id => {
+    const row = $(`${scope}.row[data-id="${id}"]`), r = R.get(id);
+    if (row && r) { const h = $('.hist', row); h.hidden = false; h.innerHTML = histHTML(r); }
+  });
+}
+const live = () => { clearTimeout(rtT); rtT = setTimeout(liveRefresh, 400); };
+let liveCh, liveWasDown = false;
+function startLive() {
+  if (liveCh) sb.removeChannel(liveCh);
+  liveCh = sb.channel('kohinoor-live')
+  .on('postgres_changes', { event: '*', schema: 'public', table: T_MAN }, p => {
+    const t = (p.new && p.new.tipo) || (p.old && p.old.tipo);
+    if (t === 'firmatario') { curView === 's-set' ? loadSet() : loadFirme(); return; }
+    if (p.new && p.new.ubicazione) addUserUbi(p.new.ubicazione);
+    live();
+  })
+  .on('postgres_changes', { event: '*', schema: 'public', table: T_ART }, () => {
+    clearTimeout(rtArtT);
+    rtArtT = setTimeout(async () => { await loadArticoli(); if (curView === 's-set') loadSet(); }, 3000);
+  })
+  .subscribe(st => {
+    if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { liveWasDown = true; setTimeout(startLive, 3000); }
+    else if (st === 'SUBSCRIBED' && liveWasDown) { liveWasDown = false; liveRefresh(); loadArticoli(); }
+  });
+}
+startLive();
+
+/* ---- heartbeat: ping periodic către Supabase ---- */
+let pingFail = 0;
+async function ping() {
+  try {
+    const { error } = await sb.from(T_ART).select('id').limit(1);
+    if (error) throw error;
+    if (pingFail >= 2) { toast('Connessione ripristinata', 'ok'); startLive(); liveRefresh(); }
+    pingFail = 0;
+  } catch (_) {
+    pingFail++;
+    if (pingFail === 2) toast('Connessione persa, riprovo…', 'bad');
+    try { sb.realtime.connect(); } catch (__) {}
+  }
+}
+setInterval(ping, 25000);
+window.addEventListener('online', ping);
+// rete di sicurezza: se il tempo reale non arriva, aggiorna comunque
+setInterval(() => { if (!document.hidden) liveRefresh(); }, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { liveRefresh(); loadArticoli(); } });
+
+/* ============ AVVIO ============ */
+(async function init() {
+  $('#vtitle').textContent = TITLES['m-ins'];
+  caps($('#f-ubi')); caps($('#e-ubi'));
+  $('#f-data').value = localDate(new Date());
+  attachSuggest($('#f-cod'), $('#f-hint'));
+  attachSuggest($('#e-cod'), null);
+  attachSuggest($('#f-ubi'), null, allUbi, { prefix: true, first: () => ubiMap.get($('#f-cod').value.trim().toUpperCase()) });
+  attachSuggest($('#e-ubi'), null, allUbi, { prefix: true, first: () => ubiMap.get($('#e-cod').value.trim().toUpperCase()) });
+  await Promise.all([loadFirme(), loadArticoli(), loadUserUbi()]);
+  loadRecent(); loadCounts();
+  setInterval(loadCounts, 30000);
+  setInterval(() => { if (!$('#f-data').value) $('#f-data').value = localDate(new Date()); }, 60000);
+})();
+
+</script>
+</body>
+</html>
