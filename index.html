@@ -138,6 +138,10 @@ input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--pri)}
 .row{padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;transition:border-color .15s}
 .row:hover{border-color:#b6c8c3}
 .row.deleted{background:#fff6f7;border-color:#f3cdd3}
+
+.row.dup{border-left:4px solid var(--warn)}
+
+
 .c-main{display:flex;gap:12px;align-items:center;min-width:0}
 .c-main .code{font-size:16px;font-weight:800;letter-spacing:-.01em;word-break:break-word}
 .c-main small{display:block;color:var(--mut);font-size:13px;margin-top:1px}
@@ -642,6 +646,11 @@ function rowHTML(r, ctx) {
   b += `<span class="bd ${st[1]}">${r.stato === 'confermato' ? ic('check') : ''}${st[0]}</span>`;
   if (r.modificato_n > 0) b += `<button class="bd bad" data-act="hist" title="Vedi la cronologia delle modifiche">${ic('pencil')}Modificato ×${r.modificato_n}</button>`;
   if (retro) b += `<span class="bd warn" title="La data del foglio (${fmtD(r.data_foglio)}) è diversa dalla data di inserimento (${fmtD(localDate(r.created_at))})">${ic('alert')}Altra data</span>`;
+  const dl = ctx === 'ver' ? (DUP.get(r.codice) || []) : [];
+  if (dl.length) {
+    const nd = new Set(dl.map(x => x.data_foglio)).size;
+    b += `<button class="bd warn" data-act="dup" title="Articolo segnalato più volte">${ic('alert')}Ripetuto ×${dl.length}${nd > 1 ? ' · ' + nd + ' giorni' : ''}</button>`;
+  }
   const btn = (a, icon, t, c = '') => `<button class="btn sm ${c}" data-act="${a}" title="${t}">${ic(icon)}<span>${t}</span></button>`;
   let a = '';
   if (ctx === 'ins') a = btn('edit', 'pencil', 'Modifica', 'ghost') + btn('del', 'trash', 'Elimina', 'ghost bad');
@@ -654,7 +663,7 @@ function rowHTML(r, ctx) {
   if (ctx === 'trash') a = btn('restore', 'undo', 'Ripristina', 'ghost');
   const hasHist = (r.storico && r.storico.length) || r.sc_fatto_il || r.confermato_il || r.sc_richiesto_il || r.eliminato_il;
   if (hasHist && r.modificato_n === 0) b += `<button class="bd" data-act="hist" title="Vedi la cronologia">${ic('clock')}Cronologia</button>`;
-  return `<div class="row ${r.eliminato ? 'deleted' : ''}" data-id="${r.id}">
+  return `<div class="row ${r.eliminato ? 'deleted' : ''} ${dl.length ? 'dup' : ''}" data-id="${r.id}">
     <div class="c-main">${ctx === 'ver' ? '<input type="checkbox" class="sel" aria-label="Seleziona">' : ''}<div><b class="code">${esc(r.codice)}</b>${desc ? `<small>${esc(desc)}</small>` : ''}</div></div>
     <div class="c-ubi">${r.ubicazione ? ic('pin') + esc(r.ubicazione) : '<span class="dash">—</span>'}</div>
     <div class="c-qty"><b>-${r.quantita}</b></div>
@@ -680,6 +689,9 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const rowEl = b.closest('.row'); const r = R.get(rowEl.dataset.id); if (!r) return;
   const act = b.dataset.act;
+  if (act === 'dup') {
+    const h = $('.hist', rowEl); h.hidden = !h.hidden; if (!h.hidden) h.innerHTML = dupHTML(r); return;
+  }
   if (act === 'hist') {
     const h = $('.hist', rowEl); h.hidden = !h.hidden; if (!h.hidden) h.innerHTML = histHTML(r); return;
   }
@@ -776,11 +788,32 @@ async function doSearch() {
 
 /* ============ RESPONSABILE · VERIFICA ============ */
 const STATI = [['nuovo', 'Nuovi'], ['sc_richiesta', 'Seconda spunta richiesta'], ['sc_fatta', 'Seconda spunta eseguita'], ['confermato', 'Confermati']];
+
+const DUP = new Map();
+async function loadDup(rows) {
+  DUP.clear();
+  const codes = [...new Set(rows.map(r => r.codice))];
+  for (let i = 0; i < codes.length; i += 80) {
+    const { data } = await sb.from(T_MAN).select('id,codice,quantita,firmatario,data_foglio,stato').eq('tipo', 'segnalazione').eq('eliminato', false).in('codice', codes.slice(i, i + 80));
+    (data || []).forEach(x => { if (!DUP.has(x.codice)) DUP.set(x.codice, []); DUP.get(x.codice).push(x); });
+  }
+  for (const [k, v] of [...DUP]) if (v.length < 2) DUP.delete(k);
+}
+function dupHTML(r) {
+  const nomi = { nuovo: 'Nuovo', sc_richiesta: 'Seconda spunta richiesta', sc_fatta: 'Seconda spunta eseguita', confermato: 'Confermato' };
+  const all = DUP.get(r.codice) || [];
+  const altri = all.filter(x => x.id !== r.id).sort((a, b) => b.data_foglio.localeCompare(a.data_foglio));
+  const tot = all.reduce((s, x) => s + x.quantita, 0);
+  return `<div><b>Altre segnalazioni di ${esc(r.codice)}</b> (totale con questa: <b>-${tot}</b>)</div>` +
+    altri.map(x => `<div>↺ ${fmtD(x.data_foglio)} · ${esc(x.firmatario)} · <b>-${x.quantita}</b> · ${nomi[x.stato] || x.stato}</div>`).join('');
+}
+
 async function loadVer() {
   const counts = await Promise.all(STATI.map(([s]) => sb.from(T_MAN).select('id', { count: 'exact', head: true }).eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', s).then(r => r.count || 0)));
   $('#ver-chips').innerHTML = STATI.map(([s, l], i) => `<button class="chip ${s === verStato ? 'on' : ''}" data-ver="${s}">${l} (${counts[i]})</button>`).join('');
   const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', verStato).order('created_at', { ascending: false }).limit(200);
   if (error) return toast(error.message, 'bad');
+  await loadDup(data);
   renderList($('#ver-list'), data, 'ver', 'Niente in questa categoria');
 }
 document.addEventListener('click', e => { const c = e.target.closest('[data-ver]'); if (c) { verStato = c.dataset.ver; loadVer(); } });
