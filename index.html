@@ -981,7 +981,6 @@ function refresh() { LOAD[curView](); loadCounts(); }
 let rtT, rtArtT;
 async function liveRefresh() {
   if ($('#dlg').open || $('#pwdlg').open) return;
-  loadAccessi();
   const scope = '#v-' + curView + ' ';
   const checked = $$('#ver-list .sel:checked').map(x => x.closest('.row').dataset.id);
   const opened = $$(scope + '.hist:not([hidden])').map(h => h.closest('.row').dataset.id);
@@ -1020,6 +1019,7 @@ async function ping() {
   try {
     const { error } = await sb.from(T_ART).select('id').limit(1);
     if (error) throw error;
+    if (liveDead()) startLive();
     if (pingFail >= 2) { toast('Connessione ripristinata', 'ok'); startLive(); liveRefresh(); }
     pingFail = 0;
   } catch (_) {
@@ -1031,8 +1031,16 @@ async function ping() {
 setInterval(ping, 25000);
 window.addEventListener('online', ping);
 // rete di sicurezza: se il tempo reale non arriva, aggiorna comunque
-setInterval(() => { if (!document.hidden) liveRefresh(); }, 30000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { liveRefresh(); loadArticoli(); } });
+setInterval(() => { if (!document.hidden && liveDead()) liveRefresh(); }, 30000);
+let lastArt = Date.now();
+const liveDead = () => !liveCh || ['closed', 'errored', 'leaving'].includes(liveCh.state);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  if (liveDead()) startLive();
+  liveRefresh();
+  if (Date.now() - lastArt > 600000) { lastArt = Date.now(); loadArticoli(); }
+});
+window.addEventListener('pageshow', e => { if (e.persisted) { if (liveDead()) startLive(); liveRefresh(); } });
 
 /* ============ AVVIO ============ */
 (async function init() {
