@@ -1021,6 +1021,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { li
   setInterval(() => { if (!$('#f-data').value) $('#f-data').value = localDate(new Date()); }, 60000);
 })();
 
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
 </script>
 </body>
 </html>
