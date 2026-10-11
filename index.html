@@ -116,6 +116,16 @@ input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--pri)}
 .sugg div.own svg.i{width:16px;height:16px}
 .sugg div:last-child{border:0}.sugg div:hover{background:var(--soft);color:var(--pri)}
 
+.clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:0;border-radius:50%;background:#e3eae8;color:#5d716b;display:none;place-items:center;cursor:pointer;padding:0;transition:background .15s,color .15s,transform .1s}
+.clr:hover{background:var(--pri);color:#fff}
+.clr:active{transform:translateY(-50%) scale(.88)}
+.clr svg.i{width:14px;height:14px;stroke-width:2.8}
+.sw.hasclr input{padding-right:44px}
+.sw.hasclr.filled .clr{display:grid;animation:clrIn .15s ease-out}
+@keyframes clrIn{from{opacity:0;transform:translateY(-50%) scale(.6)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+
+
+
 /* ---------- liste ---------- */
 .list{container-type:inline-size}
 .rowhead,.row{display:grid;grid-template-columns:minmax(0,1.5fr) 140px 56px 130px 150px minmax(0,1.2fr) 290px;gap:14px;align-items:center}
@@ -531,6 +541,27 @@ function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt
   const wrap = document.createElement('div'); wrap.className = 'sw';
   inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
   const box = document.createElement('div'); box.className = 'sugg'; box.hidden = true; wrap.appendChild(box);
+  if (!opt.prefix) {
+    wrap.classList.add('hasclr');
+    const clr = document.createElement('button');
+    clr.type = 'button'; clr.className = 'clr'; clr.setAttribute('aria-label', 'Cancella');
+    clr.innerHTML = '<svg class="i"><use href="#i-x"/></svg>';
+    wrap.appendChild(clr);
+    const sync = () => wrap.classList.toggle('filled', !!inp.value);
+    inp.addEventListener('input', sync);
+    clr.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      inp.value = ''; box.hidden = true; sync();
+      if (hintEl) hintEl.innerHTML = '';
+      inp.focus();
+    });
+    new MutationObserver(() => {}).disconnect();
+    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    Object.defineProperty(inp, 'value', {
+      get() { return desc.get.call(this); },
+      set(v) { desc.set.call(this, v); sync(); }
+    });
+  }
   const check = () => {
     const v = inp.value.trim().toUpperCase();
     const known = codeMap.has(v);
