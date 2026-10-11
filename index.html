@@ -782,7 +782,7 @@ $('#f-save').onclick = saveIns;
 $('#f-qty').addEventListener('keydown', e => { if (e.key === 'Enter') saveIns(); });
 
 async function loadRecent() {
-  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).order('created_at', { ascending: false }).limit(10);
+  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).neq('stato', 'confermato').order('created_at', { ascending: false }).limit(10);
   if (error) return toast(error.message, 'bad');
   renderList($('#recent'), data, 'ins', 'Nessuna registrazione per ora');
 }
