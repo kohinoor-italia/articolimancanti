@@ -371,6 +371,24 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
   <section class="view" id="v-s-cos">
     <div class="card">
       <h2><svg class="i"><use href="#i-trash"/></svg>Articoli eliminati</h2>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 4px">
+        <span class="muted" style="font-size:14px">Segnala come vecchi dopo</span>
+        <select id="cos-days" style="width:auto;padding:8px 12px">
+          <option value="7">7 giorni</option>
+          <option value="14">14 giorni</option>
+          <option value="30">30 giorni</option>
+          <option value="60">60 giorni</option>
+          <option value="90">90 giorni</option>
+        </select>
+      </div>
+      <p class="muted" style="margin:0 0 4px;font-size:13px">Nulla viene eliminato automaticamente: si elimina solo con «Elimina definitivamente».</p>
+      <div class="tools">
+        <button class="btn sm gray" id="cos-all"><svg class="i"><use href="#i-list"/></svg>Seleziona tutto</button>
+        <button class="btn sm gray" id="cos-old"><svg class="i"><use href="#i-clock"/></svg>Seleziona vecchi</button>
+        <button class="btn sm ok" id="cos-rest"><svg class="i"><use href="#i-undo"/></svg>Ripristina selezione</button>
+        <button class="btn sm ghost bad" id="cos-purge"><svg class="i"><use href="#i-trash"/></svg>Elimina definitivamente</button>
+      </div>
+
       <div class="list" id="cos-list"></div>
     </div>
   </section>
@@ -646,6 +664,11 @@ function rowHTML(r, ctx) {
   b += `<span class="bd ${st[1]}">${r.stato === 'confermato' ? ic('check') : ''}${st[0]}</span>`;
   if (r.modificato_n > 0) b += `<button class="bd bad" data-act="hist" title="Vedi la cronologia delle modifiche">${ic('pencil')}Modificato ×${r.modificato_n}</button>`;
   if (retro) b += `<span class="bd warn" title="La data del foglio (${fmtD(r.data_foglio)}) è diversa dalla data di inserimento (${fmtD(localDate(r.created_at))})">${ic('alert')}Altra data</span>`;
+    if (ctx === 'trash' && r.eliminato_il) {
+    const age = Math.floor((Date.now() - new Date(r.eliminato_il)) / 864e5);
+    b += `<span class="bd ${age >= trashDays() ? 'bad' : ''}">${ic('clock')}Nel cestino da ${age} gg${age >= trashDays() ? ' · vecchio' : ''}</span>`;
+  }
+
   const dl = ctx === 'ver' ? (DUP.get(r.codice) || []) : [];
   if (dl.length) {
     const nd = new Set(dl.map(x => x.data_foglio)).size;
@@ -664,8 +687,9 @@ function rowHTML(r, ctx) {
   const hasHist = (r.storico && r.storico.length) || r.sc_fatto_il || r.confermato_il || r.sc_richiesto_il || r.eliminato_il;
   if (hasHist && r.modificato_n === 0) b += `<button class="bd" data-act="hist" title="Vedi la cronologia">${ic('clock')}Cronologia</button>`;
   return `<div class="row ${r.eliminato ? 'deleted' : ''} ${dl.length ? 'dup' : ''}" data-id="${r.id}">
-    <div class="c-main">${ctx === 'ver' ? '<input type="checkbox" class="sel" aria-label="Seleziona">' : ''}<div><b class="code">${esc(r.codice)}</b>${desc ? `<small>${esc(desc)}</small>` : ''}</div></div>
+<div class="c-main">${ctx === 'ver' || ctx === 'trash' ? '<input type="checkbox" class="sel" aria-label="Seleziona">' : ''}<div><b class="code">${esc(r.codice)}</b>${desc ? `<small>${esc(desc)}</small>` : ''}</div></div>
     <div class="c-ubi">${r.ubicazione ? ic('pin') + esc(r.ubicazione) : '<span class="dash">—</span>'}</div>
+
     <div class="c-qty"><b>-${r.quantita}</b></div>
     <div class="c-who">${ic('user')}${esc(r.firmatario)}</div>
     <div class="c-date">${ic('cal')}${fmtD(r.data_foglio)}<small>inserito ${fmtDT(r.created_at)}</small></div>
@@ -893,11 +917,44 @@ $('#st-xls').onclick = () => {
 };
 
 /* ============ RESPONSABILE · CESTINO ============ */
+const trashDays = () => parseInt(localStorage.getItem('kohinoor_trash_days'), 10) || 30;
+$('#cos-days').value = trashDays();
+$('#cos-days').onchange = e => {
+  localStorage.setItem('kohinoor_trash_days', e.target.value);
+  toast(`Segnalo come vecchi dopo ${e.target.value} giorni`, 'ok');
+  loadTrash();
+};
 async function loadTrash() {
-  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', true).order('eliminato_il', { ascending: false }).limit(200);
+  const { data, error } = await sb.from(T_MAN)
   if (error) return toast(error.message, 'bad');
   renderList($('#cos-list'), data, 'trash', 'Il cestino è vuoto');
 }
+
+$('#cos-all').onclick = () => { const cb = $$('#cos-list .sel'); const all = cb.length && cb.every(x => x.checked); cb.forEach(x => x.checked = !all); };
+$('#cos-old').onclick = () => {
+  $$('#cos-list .row').forEach(row => {
+    const r = R.get(row.dataset.id);
+    const age = Math.floor((Date.now() - new Date(r.eliminato_il)) / 864e5);
+    $('.sel', row).checked = age >= trashDays();
+  });
+};
+
+$('#cos-rest').onclick = async () => {
+  const ids = $$('#cos-list .sel:checked').map(x => x.closest('.row').dataset.id);
+  if (!ids.length) return toast('Seleziona almeno una riga', 'bad');
+  const { error } = await sb.from(T_MAN).update({ eliminato: false, modificato_da: 'Responsabile' }).in('id', ids);
+  if (error) return toast(error.message, 'bad');
+  toast(`${ids.length} righe ripristinate`, 'ok'); refresh();
+};
+$('#cos-purge').onclick = async () => {
+  const ids = $$('#cos-list .sel:checked').map(x => x.closest('.row').dataset.id);
+  if (!ids.length) return toast('Seleziona almeno una riga', 'bad');
+  if (!confirm(`Eliminare DEFINITIVAMENTE ${ids.length} righe? Non si può annullare.`)) return;
+  const { error } = await sb.from(T_MAN).delete().eq('tipo', 'segnalazione').eq('eliminato', true).in('id', ids);
+  if (error) return toast(error.message, 'bad');
+  toast(`${ids.length} righe eliminate definitivamente`, 'ok'); refresh();
+};
+
 
 /* ============ RESPONSABILE · IMPOSTAZIONI ============ */
 async function loadSet() {
@@ -1057,10 +1114,10 @@ let rtT, rtArtT;
 async function liveRefresh() {
   if ($('#dlg').open || $('#pwdlg').open) return;
   const scope = '#v-' + curView + ' ';
-  const checked = $$('#ver-list .sel:checked').map(x => x.closest('.row').dataset.id);
+  const checked = $$(scope + '.sel:checked').map(x => x.closest('.row').dataset.id);
   const opened = $$(scope + '.hist:not([hidden])').map(h => h.closest('.row').dataset.id);
   await Promise.all([LOAD[curView](), loadCounts()]);
-  checked.forEach(id => { const cb = $(`#ver-list .row[data-id="${id}"] .sel`); if (cb) cb.checked = true; });
+  checked.forEach(id => { const cb = $(`${scope}.row[data-id="${id}"] .sel`); if (cb) cb.checked = true; });
   opened.forEach(id => {
     const row = $(`${scope}.row[data-id="${id}"]`), r = R.get(id);
     if (row && r) { const h = $('.hist', row); h.hidden = false; h.innerHTML = histHTML(r); }
