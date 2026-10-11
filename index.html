@@ -2,1210 +2,1022 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Mancanze</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abbassamento</title>
+<link rel="icon" type="image/png" href="https://github.com/kohinoor-italia/cambioubicazione/raw/refs/heads/main/icon.png">
+<link rel="apple-touch-icon" href="https://github.com/kohinoor-italia/cambioubicazione/raw/refs/heads/main/icon.png">
+<meta name="application-name" content="Abbassamento">
+<meta name="apple-mobile-web-app-title" content="Abbassamento">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<meta name="theme-color" content="#0d3a37">
-<meta name="application-name" content="Mancanze">
+<meta name="theme-color" content="#1c2226">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Mancanze">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
 <style>
 :root{
-  --spruce:#0d3a37;--spruce2:#124a45;--bg:#edf2f0;--card:#fff;--ink:#14211f;--mut:#5d716b;--line:#d6e0dc;--soft:#f4f8f7;
-  --pri:#c2410c;--pri-h:#a8360a;--glow:#ff8a3d;
-  --ok:#137a47;--okbg:#dcf3e6;--warn:#a65a05;--warnbg:#fdecc8;--bad:#c01f3a;--badbg:#fde0e5;--info:#0c6f8c;--infobg:#d9eff6;
+  --ink:#1c2226; --bg:#e4e8ea; --card:#fff; --line:#c8d0d4; --mute:#5b6870;
+  --hazard:#f5b700; --ok:#1f7a4d; --okbg:#e2f3ea; --bad:#b3261e; --badbg:#fbe6e4; --info:#1d5f8c;
+  --fh:'Barlow Condensed','Arial Narrow',Arial,sans-serif; --fb:'Barlow',system-ui,Arial,sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-padding-top:90px}
-body{margin:0;font:15px/1.45 "Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
-svg.i{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-button,input,select{font:inherit}
-html{-webkit-text-size-adjust:100%;touch-action:manipulation}
-:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 var(--fb)}
+button,input,select{font:inherit;color:inherit}
+header{background:var(--ink);color:#fff;padding:10px 14px 16px;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;
+  background:repeating-linear-gradient(-45deg,var(--hazard) 0 12px,var(--ink) 12px 24px)}
+header h1{margin:0;font:700 22px/1 var(--fh);letter-spacing:.04em;text-transform:uppercase}
+header .sub{color:#8fa0a8;font-size:11.5px;margin-top:3px;letter-spacing:.02em;line-height:1.3}
 
-/* ---------- struttura ---------- */
-.app{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh}
-.side{position:sticky;top:0;height:100vh;background:var(--spruce);color:#c8dedb;padding:calc(20px + env(safe-area-inset-top,0px)) 14px 20px;display:flex;flex-direction:column;gap:3px;overflow:auto}
-.brand{display:flex;align-items:center;gap:12px;color:#fff;padding:2px 10px 16px}
-.brand .logo{width:40px;height:40px;border-radius:8px;object-fit:contain;padding:5px;background:#fff;flex:0 0 auto}
-
-.brand .mark svg{width:24px;height:24px;stroke-width:2.2}
-.brand b{font-size:20px;font-weight:900;letter-spacing:-.01em;display:block;line-height:1.1}
-
-.brand span{font-size:12.5px;color:#8fb5af}
-.grp{font-size:12.5px;color:#7fa8a1;padding:16px 12px 6px;font-weight:600}
-.nav{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:0;border-radius:11px;background:none;color:#c8dedb;font-weight:600;font-size:15px;cursor:pointer;text-align:left;transition:background .15s,color .15s}
-.nav:hover{background:rgba(255,255,255,.07);color:#fff}
-.nav.on{background:rgba(255,255,255,.13);color:#fff}
-.nav.on::before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:4px;border-radius:0 4px 4px 0;background:var(--glow)}
-.nav .cnt{margin-left:auto}
-.cnt{display:inline-block;min-width:22px;padding:1px 7px;border-radius:11px;background:var(--glow);color:#3a1500;font-size:12px;font-weight:800;text-align:center}
-.cnt:empty,.cnt[data-n="0"]{display:none}
-#cnt-ver{background:#38b6e0;color:#042a38}
-.content{padding:0 32px 48px;min-width:0}
-.topbar{position:sticky;top:0;z-index:25;display:flex;align-items:center;gap:20px;padding:calc(20px + env(safe-area-inset-top,0px)) 0 16px;background:linear-gradient(var(--bg) 80%,rgba(237,242,240,0))}
-.topbar h1{margin:0;font-size:28px;font-weight:800;letter-spacing:-.02em;flex:1;line-height:1.15}
-.sig{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 6px 0 12px;color:var(--mut)}
-.sig .firme-bar{min-width:210px}
-.sig select{border:0;background:none;padding:11px 6px;font-weight:700;color:var(--ink);cursor:pointer;width:100%}
-.sig select:focus-visible{outline:0}
-.sig:focus-within{outline:2px solid var(--glow);outline-offset:2px}
-#clock{text-align:right;line-height:1.15;color:var(--mut);font-size:13px;min-width:150px}
-#clock b{display:block;font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
-.view{display:none}.view.on{display:block}
-.nav .sm{display:none}
-
-/* ---------- componenti ---------- */
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
-.card + .card{margin-top:16px}
-.split > .card + .card{margin-top:0}
-.card h2{margin:0 0 14px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
-.card h2 svg{color:var(--pri)}
-.split{display:grid;grid-template-columns:minmax(340px,430px) minmax(0,1fr);gap:20px;align-items:start}
-.split2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-.split2 .card + .card{margin-top:0}
-label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
-label.first{margin-top:0}
-input,select,textarea{font-size:16px;touch-action:manipulation}
-input,select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);transition:border-color .15s,box-shadow .15s}
-input:hover,select:hover{border-color:#b9c9c4}
-input:focus,select:focus{outline:0;border-color:var(--pri);box-shadow:0 0 0 3px rgba(194,65,12,.15)}
-input[type=date]{display:block;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;min-height:47px;text-align:left;line-height:1.2}
-input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
-input[type=date]::-webkit-calendar-picker-indicator{margin:0 0 0 6px}
-input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--pri)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.gridf{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
-.hint{font-size:13px;margin-top:6px;min-height:18px}
-.qw{position:relative}
-.qw::before{content:"-";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:20px;font-weight:800;color:var(--bad);pointer-events:none}
-.qw input{padding-left:30px;font-weight:700}
-
-
-.muted{color:var(--mut)}
-.note{font-size:12.5px;color:var(--mut);margin-top:6px}
-
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 15px;border:1px solid transparent;border-radius:10px;background:var(--pri);color:#fff;font-weight:700;cursor:pointer;transition:background .15s,transform .05s}
-.btn:hover{background:var(--pri-h)}.btn:active{transform:translateY(1px)}
-.btn.big{width:100%;padding:15px;font-size:16px;margin-top:20px;border-radius:12px}
-.btn.sm{padding:7px 11px;font-size:13.5px;border-radius:9px}
-.btn.sm svg.i{width:16px;height:16px}
-.btn.ok{background:var(--ok)}.btn.ok:hover{background:#0f6439}
-.btn.gray{background:#fff;color:var(--ink);border-color:var(--line)}.btn.gray:hover{background:var(--soft)}
-.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}.btn.ghost:hover{background:var(--soft)}
-.btn.ghost.bad{color:var(--bad)}.btn.ghost.bad:hover{background:var(--badbg);border-color:#f2b8c1}
-.btn.ghost.warn{color:var(--warn)}.btn.ghost.warn:hover{background:var(--warnbg);border-color:#efd08a}
-.btn:disabled{opacity:.5;pointer-events:none}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
-
-.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:12px;width:fit-content;max-width:100%}
-.chip{padding:8px 14px;border-radius:9px;border:0;background:none;font-weight:600;cursor:pointer;color:var(--mut)}
-.chip:hover{color:var(--ink)}
-.chip.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,33,31,.18)}
-
-.sw{position:relative}
-.sugg{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(13,58,55,.18);overflow:hidden}
-.sugg div{padding:11px 14px;cursor:pointer;font-weight:600;border-bottom:1px solid var(--soft)}
-.sugg div.own{display:flex;align-items:center;gap:8px;background:#fbf3ee;color:var(--pri)}
-.sugg div.own svg.i{width:16px;height:16px}
-.sugg div:last-child{border:0}.sugg div:hover{background:var(--soft);color:var(--pri)}
-
-.clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:0;border-radius:50%;background:#e3eae8;color:#5d716b;display:none;place-items:center;cursor:pointer;padding:0;transition:background .15s,color .15s,transform .1s}
-.clr:hover{background:var(--pri);color:#fff}
-.clr:active{transform:translateY(-50%) scale(.88)}
-.clr svg.i{width:14px;height:14px;stroke-width:2.8}
-.sw.hasclr input{padding-right:44px}
-.sw.hasclr.filled .clr{display:grid;animation:clrIn .15s ease-out}
-@keyframes clrIn{from{opacity:0;transform:translateY(-50%) scale(.6)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+header .sub b{color:var(--hazard);font-weight:600}
+header .sub .dim{opacity:.6;display:block;font-size:11px;margin-top:1px}
+#conn{display:flex;align-items:center;gap:6px;justify-content:flex-end;font-size:12px;color:#aeb9bf}
+#hdrRight{position:absolute;right:14px;top:10px;text-align:right;line-height:1.3}
+#hdrDate{font-size:11px;color:#8fa0a8}
+#hdrTime{font:600 15px var(--fh);letter-spacing:.04em;color:#fff;font-variant-numeric:tabular-nums}
+#conn::before{content:"";width:10px;height:10px;border-radius:50%;background:#8a979e}
+#conn.ok::before{background:#3ecf8e} #conn.bad::before{background:#ff5a4f}
+#conn.bad{color:#ff9a92}
+nav{display:flex;gap:4px;padding:10px 12px 0;max-width:980px;margin:auto}
+nav button{flex:1;padding:12px 8px;border:0;border-radius:8px 8px 0 0;background:#cfd6d9;font:600 17px var(--fh);letter-spacing:.03em;cursor:pointer}
+nav button[aria-selected=true]{background:var(--card)}
+main{max-width:980px;margin:auto;padding:0 12px 60px}
+.panel{background:var(--card);border-radius:0 0 10px 10px;padding:14px}
+.hide{display:none!important}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:2px solid var(--ink);background:var(--card);border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer;min-height:44px}
+.btn.pri{background:var(--hazard);border-color:var(--ink)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.bad{background:var(--card);border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--info);outline-offset:2px}
+input[type=search],input[type=number],select{border:2px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff;min-height:44px}
+input[type=search]{flex:1;min-width:140px}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px}
+.box h2{margin:0 0 6px;font:700 20px var(--fh);letter-spacing:.02em}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:8px 0}
+.kv div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.kv b{display:block;font:700 24px var(--fh)}
+.kv span{font-size:13px;color:var(--mute)}
+.msg{padding:10px 12px;border-radius:8px;margin:0 0 12px;font-size:15px}
+.msg.err{background:var(--badbg);color:var(--bad)} .msg.ok{background:var(--okbg);color:var(--ok)} .msg.info{background:#e3eef6;color:var(--info)}
+.msg.demo{background:var(--hazard);color:var(--ink);font-weight:600}
+.muted{color:var(--mute);font-size:14px}
+/* task cards */
+details.task{border:2px solid var(--line);border-radius:10px;margin:0 0 10px;background:#fff}
+details.task[open]{border-color:var(--ink)}
+details.task.done{border-color:var(--ok);background:var(--okbg)}
+details.task.problem{border-color:var(--bad);background:var(--badbg)}
+details.task summary{list-style:none;cursor:pointer;padding:12px;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+details.task summary::-webkit-details-marker{display:none}
+.dest{font:700 30px/1 var(--fh);letter-spacing:.04em}
+.art{font-weight:600}
+.desc{color:var(--mute);font-size:14px;grid-column:1/2}
+.chips{display:flex;gap:6px;align-items:center;grid-column:2/3;grid-row:1/3;flex-direction:column;align-items:flex-end;justify-content:center}
+.chip{background:var(--ink);color:#fff;border-radius:6px;padding:3px 9px;font:700 18px var(--fh);white-space:nowrap}
+.chip.free{background:var(--hazard);color:var(--ink)}
+.steps{padding:0 12px 12px}
+.step{display:flex;gap:10px;align-items:baseline;padding:10px 0;border-top:1px dashed var(--line)}
+.step .loc{font:700 22px var(--fh);letter-spacing:.04em;min-width:120px}
+.step .act{flex:1}
+.tag{display:inline-block;background:var(--hazard);border-radius:5px;padding:1px 7px;font-weight:700;font-size:13px}
+.tag.warn{background:var(--badbg);color:var(--bad)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;padding-top:8px}
+.acts .btn{flex:1;min-width:150px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:600;color:var(--mute)}
+td.num,th.num{text-align:right}
+td input{width:90px;padding:6px 8px;min-height:36px}
+td input.missing{border-color:var(--hazard)}
+.tablewrap{overflow-x:auto}
+.warnlist{max-height:180px;overflow:auto;font-size:14px;margin:6px 0 0;padding-left:18px}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:600}
+.seg button[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:#fff}
+.lockbox{max-width:320px;margin:30px auto;text-align:center}
+.lockbox h2{margin:0 0 4px;font:700 22px var(--fh)}
+.lockbox input{width:100%;text-align:center;letter-spacing:.2em;margin:10px 0 6px}
+.lockbox .err{color:var(--bad);font-size:14px;min-height:20px}
+#tab-catalog .muted{font-size:12px;max-width:640px;margin:6px 0 10px}
+#catInfo p{font-size:13px;color:var(--mute);margin:0 0 4px!important}
 
 
 
-/* ---------- liste ---------- */
-.list{container-type:inline-size}
-.rowhead,.row{display:grid;grid-template-columns:minmax(0,1.5fr) 140px 56px 130px 150px minmax(0,1.2fr) 290px;gap:14px;align-items:center}
-.rowhead{padding:0 16px 8px;font-size:12.5px;font-weight:600;color:var(--mut)}
-.row{padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;transition:border-color .15s}
-.row:hover{border-color:#b6c8c3}
-.row.deleted{background:#fff6f7;border-color:#f3cdd3}
+.sbar{display:flex;gap:6px}
+.sbar .btn{flex:1;min-height:38px;padding:6px 10px;text-align:center;display:flex;align-items:center;justify-content:center}
+#stockInfo .msg{padding:5px 10px;font-size:12.5px;margin:0}
+#stockInfo p{margin:0;font-size:12.5px}
+.tbar{display:flex;gap:6px;margin-bottom:8px}
+.tbar input[type=search]{flex:1;min-width:0;min-height:38px;padding:6px 10px}
+.tbar select{width:auto;min-height:38px;padding:6px 8px}
+.tbar .btn{min-height:38px;padding:6px 12px}
+.seg{flex-wrap:nowrap;overflow-x:auto}
+.seg button{flex:none;white-space:nowrap;padding:4px 12px}
+.seg{scrollbar-width:none;padding:3px 0;margin-top:-3px}
+.seg::-webkit-scrollbar{display:none}
+.seg.fr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent)}
+.seg.fl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px);mask-image:linear-gradient(90deg,transparent,#000 36px)}
+.seg.fl.fr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 36px),transparent)}
+@media (max-width:520px){.dest{font-size:26px}.step{flex-direction:column;gap:2px}}
+@media (prefers-reduced-motion:no-preference){details.task[open] .steps{animation:in .15s ease-out}@keyframes in{from{opacity:.4}to{opacity:1}}}
 
-.row.dup{border-left:4px solid var(--warn)}
 
+/* ============ DESKTOP (≥1000px): meniu stânga, conținut dreapta ============ */
+@media (min-width:1000px){
+  body{display:grid;grid-template-columns:190px minmax(0,1fr);grid-template-rows:auto 1fr;min-height:100vh;font-size:15px}
 
-.c-main{display:flex;gap:12px;align-items:center;min-width:0}
-.c-main .code{font-size:16px;font-weight:800;letter-spacing:-.01em;word-break:break-word}
-.c-main small{display:block;color:var(--mut);font-size:13px;margin-top:1px}
-.c-ubi,.c-who,.c-date{display:flex;align-items:center;gap:7px;color:var(--ink);min-width:0;flex-wrap:wrap}
-.c-ubi svg,.c-who svg,.c-date svg{color:var(--mut)}
-.c-date small{flex-basis:100%;color:var(--mut);font-size:12px;margin-left:25px;margin-top:-4px}
-.c-ubi{font-weight:600}.dash{color:#9db0aa}
-.c-qty b{font-size:22px;font-weight:800;letter-spacing:-.02em}
-.c-qty::before{content:"Q.tà ";display:none;color:var(--mut);font-size:13px}
-.c-bd{display:flex;flex-wrap:wrap;gap:4px}
-.acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
-.bd{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:7px;font-size:12.5px;font-weight:700;background:#e6ecea;color:var(--ink);border:0;white-space:nowrap}
-.bd svg.i{width:13px;height:13px;stroke-width:2.4}
-.bd.warn{background:var(--warnbg);color:var(--warn)}.bd.ok{background:var(--okbg);color:var(--ok)}.bd.bad{background:var(--badbg);color:var(--bad)}.bd.info{background:var(--infobg);color:var(--info)}
-button.bd{cursor:pointer}button.bd:hover{filter:brightness(.96)}
-.hist{grid-column:1/-1;background:var(--soft);border-left:3px solid var(--pri);border-radius:8px;padding:10px 14px;font-size:14px}
-.hist div{padding:3px 0}
-.hist[hidden]{display:none}
-.sel{flex:0 0 auto}
-.empty{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--mut);padding:36px 10px;text-align:center}
-.empty svg{width:34px;height:34px;stroke-width:1.5;color:#9db0aa}
-@container (max-width:1200px){
-  .rowhead{display:none}
-  .row{display:flex;flex-wrap:wrap;gap:8px 16px}
-  .c-main{order:0;flex:1 1 220px}
-  .acts{order:0}
-  .c-qty{order:1}.c-qty::before{display:inline}
-  .c-qty b{font-size:17px}
-  .c-ubi{order:2}.c-who{order:3}.c-date{order:4}
-  .c-date small{flex-basis:auto;margin:0}
-  .c-bd{order:5;flex:1 1 100%}
-  .hist{order:6;flex:1 1 100%}
+  /* header compact, pe toată lățimea */
+  header{grid-column:1/-1;padding:10px 22px 18px}
+  header h1{font-size:24px}
+  header .sub{font-size:12.5px}
+  header .sub .dim{display:inline;margin-left:4px;font-size:12.5px}
+  #hdrRight{right:22px;top:8px}
+  #hdrTime{font-size:20px}
+
+  /* meniu lateral stânga */
+  nav{grid-column:1;grid-row:2;flex-direction:column;gap:6px;max-width:none;margin:0;
+    padding:16px 12px;background:#222b30}
+  nav button{flex:none;text-align:left;border-radius:8px;padding:12px 14px;font-size:18px;
+    background:transparent;color:#cfd6d9;transition:background .15s}
+  nav button:hover{background:#2f3a40}
+  nav button[aria-selected=true]{background:var(--hazard);color:var(--ink)}
+
+  /* conținut dreapta */
+  main{grid-column:2;grid-row:2;max-width:none;margin:0;padding:14px 18px 24px}
+  .panel{border-radius:10px;padding:14px 16px;box-shadow:0 2px 10px rgba(28,34,38,.08)}
+  .box{padding:12px 14px;margin:0 0 12px}
+  .box h2{font-size:20px}
+  .kv{margin:0 0 10px;gap:8px}
+  .kv div{padding:7px 10px;border-left:4px solid var(--hazard)}
+  .kv b{font-size:22px}
+  .kv span{font-size:12.5px}
+  .btn:hover:not(:disabled){filter:brightness(.95)}
+
+  /* ===== ATTIVITÀ: filtre stânga | carduri dreapta ===== */
+  #tab-tasks{display:grid;grid-template-columns:270px minmax(0,1fr);grid-template-rows:auto auto auto 1fr;
+    column-gap:18px;align-content:start;align-items:start}
+  #tasksSummary{grid-column:1;grid-row:1}
+  #tasksSummary .kv{grid-template-columns:1fr 1fr}
+  #tab-tasks .tbar{grid-column:1;grid-row:2;flex-direction:column;gap:8px;margin-bottom:10px}
+  #tab-tasks .tbar input[type=search],#tab-tasks .tbar select,#tab-tasks .tbar .btn{width:100%;max-width:none}
+  #tasksFilter{grid-column:1;grid-row:3;flex-direction:column;overflow:visible;gap:6px;margin:0 0 10px!important;padding:0;
+    -webkit-mask-image:none!important;mask-image:none!important}
+  #tasksFilter button{text-align:left;border-radius:8px;padding:9px 14px}
+  #tasksWarn{grid-column:1;grid-row:4}
+  #tasksList{grid-column:2;grid-row:1/5;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+    gap:10px;align-content:start;align-items:start;max-height:calc(100vh - 175px);overflow-y:auto;padding-right:6px}
+  #tasksList>.msg,#tasksList>p{grid-column:1/-1}
+  details.task{margin:0}
+  details.task summary{padding:9px 12px}
+  .dest{font-size:26px}
+  .chip{font-size:16px}
+  .steps{padding:0 12px 10px}
+  .step{padding:7px 0}
+  .step .loc{font-size:19px;min-width:100px}
+  .acts .btn{min-width:0;min-height:38px;padding:6px 10px}
+
+  /* ===== GIACENZA: încărcare stânga | tabel dreapta ===== */
+  #tab-stock{display:grid;grid-template-columns:290px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:18px;align-items:start}
+  #tab-stock>.box{grid-column:1;grid-row:1/3}
+  #tab-stock>.row{grid-column:2;grid-row:1}
+  #tab-stock>.tablewrap{grid-column:2;grid-row:2}
+  #tab-stock .sbar{flex-direction:column}
+  #stockSearch{max-width:420px}
+
+  /* ===== CATALOGO: unelte stânga | tabel dreapta ===== */
+  #tab-catalog{display:grid;grid-template-columns:310px minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:18px;align-items:start}
+  #tab-catalog>.box{grid-column:1;grid-row:1/4}
+  #tab-catalog>.row{grid-column:2;grid-row:1;gap:8px}
+  #tab-catalog>.tablewrap{grid-column:2;grid-row:2}
+  #tab-catalog>#catMore{grid-column:2;grid-row:3;margin:6px 0 0}
+  #tab-catalog .box .row{flex-direction:column;align-items:stretch}
+  #tab-catalog .box .btn{text-align:center;justify-content:center}
+  #catSearch{max-width:380px}
+
+  /* tabele */
+  .tablewrap{max-height:calc(100vh - 215px);overflow:auto;border:1px solid var(--line);border-radius:10px}
+  table{font-size:14px}
+  th,td{padding:7px 12px}
+  th{position:sticky;top:0;background:#f1f4f5;z-index:1;border-bottom:2px solid var(--line)}
+  tbody tr:hover td{background:#f7fafb}
+  td input{width:100px}
+  .warnlist{max-height:200px}
 }
+</style>
 
-/* ---------- statistiche ---------- */
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:6px 0 16px}
-.kpi{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.kpi b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
-.kpi span{font-size:13px;color:var(--mut)}
-.scroll{max-height:58vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
-tr:last-child td{border-bottom:0}
-th{position:sticky;top:0;background:var(--soft);z-index:1;font-size:12.5px;color:var(--mut);font-weight:600}
-td.n,th.n{text-align:right}
-tr.clk{cursor:pointer}tr.clk:hover td{background:#fbf3ee}
-.bar2{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--pri),var(--glow));min-width:3px}
 
-/* ---------- impostazioni ---------- */
-.frow{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:8px 0;border-bottom:1px solid var(--soft)}
-.frow b{flex:1 1 110px}
-svg.lk{width:15px;height:15px;margin-left:6px;vertical-align:-2px;color:var(--ok)}
-.av{width:34px;height:34px;border-radius:50%;background:var(--spruce);color:#fff;display:grid;place-items:center;font-weight:800}
-.drop{border:2px dashed #b6c8c3;border-radius:12px;padding:16px;background:var(--soft)}
-.drop input{background:transparent;border:0;padding:0}
 
-dialog{border:0;border-radius:18px;padding:24px;width:min(500px,94vw);box-shadow:0 24px 70px rgba(13,40,38,.4);color:var(--ink)}
-dialog::backdrop{background:rgba(13,40,38,.5)}
-dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;z-index:100;max-width:92vw;display:none;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3)}
-#toast.bad{background:var(--bad)}#toast.ok{background:var(--ok)}
 
-/* ---------- schermo stretto: barra in basso ---------- */
-@media(max-width:1100px){.split{grid-template-columns:1fr}.split2{grid-template-columns:1fr}}
-@media(max-width:900px){
-  .app{display:block}
-  .side{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));gap:0;z-index:40;overflow:visible;box-shadow:0 -4px 20px rgba(0,0,0,.2)}
-  .brand,.grp{display:none}
-  .nav{flex:1;flex-direction:column;gap:2px;padding:6px 0;font-size:10.5px;text-align:center;justify-content:center;border-radius:9px;min-width:0}
-  .nav span:not(.cnt){white-space:nowrap}
-  .nav .lg{display:none}.nav .sm{display:inline}
-  .nav{font-size:10px;letter-spacing:-.01em}
-  .nav.on::before{display:none}
-  .nav .cnt{position:absolute;top:0;right:8px;margin:0;font-size:10px;padding:0 5px;min-width:16px}
-  .content{padding:0 12px 96px}
-  .topbar{flex-wrap:wrap;gap:8px 12px;padding:calc(12px + env(safe-area-inset-top,0px)) 0 10px}
-  .topbar h1{font-size:20px;flex:1 1 0;min-width:0;order:0}
-  #clock{order:1;min-width:0}#clock b{font-size:20px}
-  .sig{order:2;flex:1 1 100%}.sig .firme-bar{min-width:0;flex:1}
-  .card{padding:16px;border-radius:14px}
-  .cards{grid-template-columns:1fr}
-}
-@media print{.side,.topbar,.noprint,#toast{display:none!important}.app{display:block}body{background:#fff}.content{padding:0}.card{border:0;padding:0}.scroll{max-height:none;overflow:visible;border:0}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-
-<!-- ============ ICONE SVG ============ -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></symbol>
-<symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></symbol>
-<symbol id="i-checks" viewBox="0 0 24 24"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></symbol>
-<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
-<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
-<symbol id="i-clip" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
-<symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
-<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/></symbol>
-<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></symbol>
-<symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
-<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
-<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
-<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
-<symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
-<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
-<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
-<symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
-<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
-<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
-<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
-<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
-<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
-<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
-<symbol id="i-sheet" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M10 9H8"/></symbol>
-<symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 7V4H6l6 8-6 8h12v-3"/></symbol>
-<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
-</defs></svg>
-
-<div class="app">
-<!-- ============ BARRA LATERALE ============ -->
-<aside class="side noprint">
-  <div class="brand">
-    <img class="logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLh8I2uPrMGje9O84uF-y4-tFpsCPWK12CY5LRiMZuq3Iw18yOX67-UMEf&s=10" alt="KOH-I-NOOR">
-    <div><b>KOH-I-NOOR</b><span>Articoli mancanti</span></div>
+<header>
+  <h1>Abbassamento</h1>
+  <div class="sub" id="hdrSub">Magazzino KOH-I-NOOR</div>
+  <div id="hdrRight">
+    <div id="conn" role="status">connessione in corso…</div>
+       <div id="hdrTime"></div>
+     <div id="hdrDate"></div>
   </div>
+</header>
+<nav role="tablist">
+  <button role="tab" aria-selected="true" data-tab="tasks">Attività</button>
+  <button role="tab" aria-selected="false" data-tab="stock">Giacenza</button>
+  <button role="tab" aria-selected="false" data-tab="catalog">Catalogo</button>
+</nav>
+<main>
+  <div id="banner"></div>
 
-  <div class="grp">Magazzino</div>
-<button class="nav on" data-view="m-ins"><svg class="i"><use href="#i-plus"/></svg><span><span class="lg">Inserimento</span><span class="sm">Inserim.</span></span></button>
+  <!-- ATTIVITÀ -->
+  <section class="panel" id="tab-tasks">
+    <div id="tasksSummary"></div>
+    <div class="tbar">
+      <input type="search" id="tasksSearch" placeholder="Cerca articolo / ubicazione">
+      <select id="tasksSort" aria-label="Ordinamento">
+        <option value="prio">Priorità</option>
+        <option value="route">Percorso</option>
+      </select>
+      <button class="btn pri" id="btnPdf">PDF</button>
+    </div>
+    <div class="seg" id="tasksFilter" style="margin-bottom:10px">
+      <button data-f="all" aria-pressed="true">Tutte</button>
+      <button data-f="todo" aria-pressed="false">Da fare</button>
+      <button data-f="done" aria-pressed="false">Completate</button>
+      <button data-f="problem" aria-pressed="false">Problemi</button>
+    </div>
+    <div id="tasksList"></div>
+    <div id="tasksWarn"></div>
+  </section>
 
-  <button class="nav" data-view="m-sc"><svg class="i"><use href="#i-checks"/></svg><span><span class="lg">Seconda spunta</span><span class="sm">Spunta</span></span><span class="cnt" id="cnt-sc" data-n="0"></span></button>
-  <button class="nav" data-view="cerca"><svg class="i"><use href="#i-search"/></svg><span>Ricerca</span></button>
-
-  <div class="grp">Responsabile</div>
-  <button class="nav" data-view="s-ver"><svg class="i"><use href="#i-clip"/></svg><span><span class="lg">Verifica</span><span class="sm">Verifica</span></span><span class="cnt" id="cnt-ver" data-n="0"></span></button>
-  <button class="nav" data-view="s-stat"><svg class="i"><use href="#i-chart"/></svg><span><span class="lg">Statistiche</span><span class="sm">Stat.</span></span></button>
-  <button class="nav" data-view="s-cos"><svg class="i"><use href="#i-trash"/></svg><span>Cestino</span></button>
-  <button class="nav" data-view="s-set"><svg class="i"><use href="#i-sliders"/></svg><span><span class="lg">Impostazioni</span><span class="sm">Impost.</span></span></button>
-</aside>
-
-<div class="content">
-  <header class="topbar noprint">
-    <h1 id="vtitle">Inserimento articoli mancanti</h1>
-    <label class="sig" title="La mia firma" style="margin:0">
-      <svg class="i"><use href="#i-user"/></svg>
-      <div class="firme-bar"></div>
-    </label>
-    <div id="clock"></div>
-  </header>
-
-  <!-- ============ INSERIMENTO ============ -->
-  <section class="view on" id="v-m-ins">
-    <div class="split">
-      <div class="card">
-        <label class="first">Codice articolo</label>
-        <div><input id="f-cod" autocomplete="off" autocapitalize="characters" placeholder="Inizia a scrivere il codice…"></div>
-        <div class="hint" id="f-hint"></div>
-        <div class="grid2">
-          <div><label class="first">Ubicazione</label><input id="f-ubi" autocomplete="off" autocapitalize="characters" placeholder="es. A.01.01.01"></div>
-<div><label class="first">Quantità mancante</label><div class="qw"><input id="f-qty" type="number" inputmode="numeric" min="1" placeholder="0"></div></div>
-        </div>
-        <label>Data del foglio</label>
-        <input id="f-data" type="date">
-        <div class="note">La data reale dell'inserimento viene salvata separatamente, in automatico.</div>
-        <button class="btn big" id="f-save"><svg class="i"><use href="#i-check"/></svg>Salva</button>
-      </div>
-      <div class="card">
-        <h2><svg class="i"><use href="#i-clock"/></svg>Ultimi inseriti</h2>
-        <div class="list" id="recent"></div>
-      </div>
+  <!-- BLOCCO -->
+  <section class="panel hide" id="tab-lock">
+    <div class="lockbox">
+      <h2>🔒 Area protetta</h2>
+      <div class="muted">Inserisci il codice per accedere</div>
+      <input type="password" id="lockPw" inputmode="text" autocomplete="off" placeholder="Codice">
+      <div class="err" id="lockErr"></div>
+      <button class="btn pri" id="lockBtn" style="width:100%">Sblocca</button>
     </div>
   </section>
 
-  <!-- ============ SECONDA SPUNTA ============ -->
-  <section class="view" id="v-m-sc">
-    <div class="card">
-      <h2><svg class="i"><use href="#i-checks"/></svg>Richieste dal responsabile</h2>
-      <p class="muted" style="margin:0 0 14px">Controlla in negozio ogni articolo. Se la quantità non corrisponde, modificala, poi premi «Verificato».</p>
-      <div class="list" id="sc-list"></div>
+  <!-- GIACENZA -->
+  <section class="panel hide" id="tab-stock">
+    <div class="box">
+      <h2>Giacenza attuale</h2>
+      <p class="muted" style="margin:0 0 8px;font-size:12px">.xlsx / .csv · colonne: Articolo, Ubicazione, Cantitate</p>
+      <div class="sbar">
+        <label class="btn pri">Carica<input type="file" id="stockFile" accept=".xlsx,.xls,.csv" hidden></label>
+        <button class="btn" id="btnDemo">Demo</button>
+        <button class="btn bad" id="btnClearStock">Elimina</button>
+      </div>
+      <div id="stockInfo" style="margin-top:6px"></div>
     </div>
+    <div class="row" style="margin-bottom:8px"><input type="search" id="stockSearch" placeholder="Cerca nella giacenza"></div>
+    <div class="tablewrap"><table id="stockTable"></table></div>
   </section>
 
-  <!-- ============ RICERCA ============ -->
-  <section class="view" id="v-cerca">
-    <div class="card">
-      <div class="sw" style="max-width:560px">
-        <input id="q-cerca" autocomplete="off" placeholder="Cerca per codice articolo…" aria-label="Cerca per codice articolo">
+  <!-- CATALOG -->
+  <section class="panel hide" id="tab-catalog">
+    <div class="box">
+      <h2>Catalogo articoli / caselle</h2>
+      <div id="catInfo"></div>
+      <p class="muted">.xlsx · colonne: Cod Magazzino, Cod ubicazione, Articolo, Descrizione (facoltativa: Capacitate). Il catalogo viene sostituito; le capacità esistenti restano (per codice articolo).</p>
+      <div class="row">
+        <label class="btn pri">Carica catalogo (.xlsx)<input type="file" id="catFile" accept=".xlsx,.xls" hidden></label>
+        <button class="btn" id="btnCatDownload">Scarica catalogo (.xlsx)</button>
+<button class="btn" id="btnCapFill">Imposta capacità a tutti quelli senza</button>
+<button class="btn" id="btnCapExport">Esporta capacità (.xlsx)</button>
+<label class="btn">Importa capacità<input type="file" id="capFile" accept=".xlsx,.xls,.csv" hidden></label>
+        <button class="btn" id="btnCatReload">Ricarica</button>
       </div>
-      <div class="hint muted" id="q-sum"></div>
+      <div id="catPreview" style="margin-top:10px"></div>
     </div>
-    <div class="list" id="cerca-list" style="margin-top:16px"></div>
-  </section>
-
-  <!-- ============ VERIFICA ============ -->
-  <section class="view" id="v-s-ver">
-    <div class="card">
-      <div class="chips" id="ver-chips"></div>
-      <div class="tools">
-        <button class="btn sm gray" id="ver-all"><svg class="i"><use href="#i-list"/></svg>Seleziona tutto</button>
-        <button class="btn sm ok" id="ver-conf"><svg class="i"><use href="#i-check"/></svg>Conferma selezione</button>
-        <button class="btn sm ghost warn" id="ver-sc"><svg class="i"><use href="#i-refresh"/></svg>Richiedi seconda spunta</button>
-      </div>
-      <div class="list" id="ver-list"></div>
+    <div class="row" style="margin-bottom:8px">
+      <input type="search" id="catSearch" placeholder="Cerca articolo, descrizione o ubicazione (es. C.02)">
+      <select id="catPar" aria-label="Parità"><option value="">Pari + dispari</option><option value="even">Solo pari</option><option value="odd">Solo dispari</option></select>
+      <select id="catLev" aria-label="Livello"><option value="">Tutti i livelli</option></select>
+      <select id="catCap" aria-label="Capacità"><option value="">Tutti (con e senza capacità)</option><option value="with">Solo con capacità</option><option value="without">Solo senza capacità</option></select>
     </div>
+    <div class="tablewrap"><table id="catTable"></table></div>
+    <p class="muted" id="catMore"></p>
   </section>
-
-  <!-- ============ STATISTICHE ============ -->
-  <section class="view" id="v-s-stat">
-    <div class="card">
-      <div class="gridf noprint">
-        <div><label class="first">Dal</label><input type="date" id="st-from"></div>
-        <div><label class="first">Al</label><input type="date" id="st-to"></div>
-        <div><label class="first">Firma</label><select id="st-firma"></select></div>
-        <div><label class="first">Il codice contiene</label><input id="st-cod" placeholder="facoltativo"></div>
-        <div><label class="first" style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><input type="checkbox" id="st-del"> Includi cestino</label></div>
-      </div>
-      <div class="tools noprint">
-        <button class="btn" id="st-go"><svg class="i"><use href="#i-search"/></svg>Applica</button>
-        <button class="btn gray" id="st-xls"><svg class="i"><use href="#i-download"/></svg>Esporta Excel</button>
-        <button class="btn gray" id="st-print"><svg class="i"><use href="#i-print"/></svg>Stampa</button>
-      </div>
-      <div class="cards" id="st-kpi"></div>
-      <div class="scroll" id="st-table"></div>
-    </div>
-  </section>
-
-  <!-- ============ CESTINO ============ -->
-  <section class="view" id="v-s-cos">
-    <div class="card">
-      <h2><svg class="i"><use href="#i-trash"/></svg>Articoli eliminati</h2>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 4px">
-        <span class="muted" style="font-size:14px">Segnala come vecchi dopo</span>
-        <select id="cos-days" style="width:auto;padding:8px 12px">
-          <option value="0">— scegli —</option>
-          <option value="7">7 giorni</option>
-          <option value="14">14 giorni</option>
-          <option value="30">30 giorni</option>
-          <option value="60">60 giorni</option>
-          <option value="90">90 giorni</option>
-        </select>
-      </div>
-      <p class="muted" style="margin:0 0 4px;font-size:13px">Nulla viene eliminato automaticamente: si elimina solo con «Elimina definitivamente».</p>
-      <div class="tools">
-        <button class="btn sm gray" id="cos-all"><svg class="i"><use href="#i-list"/></svg>Seleziona tutto</button>
-        <button class="btn sm gray" id="cos-old"><svg class="i"><use href="#i-clock"/></svg>Seleziona vecchi</button>
-        <button class="btn sm ok" id="cos-rest"><svg class="i"><use href="#i-undo"/></svg>Ripristina selezione</button>
-        <button class="btn sm ghost bad" id="cos-purge"><svg class="i"><use href="#i-trash"/></svg>Elimina definitivamente</button>
-      </div>
-
-      <div class="list" id="cos-list"></div>
-    </div>
-  </section>
-
-  <!-- ============ IMPOSTAZIONI ============ -->
-  <section class="view" id="v-s-set">
-    <div class="split2">
-      <div class="card">
-        <h2><svg class="i"><use href="#i-users"/></svg>Firme</h2>
-        <div id="set-firme"></div>
-        <div style="display:flex;gap:10px;align-items:flex-end;margin-top:14px">
-          <div style="flex:1"><label class="first">Nuova persona</label><input id="set-newfirma" placeholder="Nome"></div>
-          <button class="btn" id="set-addfirma"><svg class="i"><use href="#i-plus"/></svg>Aggiungi</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2><svg class="i"><use href="#i-sheet"/></svg>Elenco articoli</h2>
-        <p class="muted" id="set-count" style="margin:0 0 6px;font-weight:600"></p>
-        <p style="margin:0 0 12px;font-size:14px">Colonne: Cod Magazzino, Cod ubicazione, Articolo, Descrizione. Le righe senza articolo vengono ignorate. <b>L'importazione cancella tutto ciò che esiste e riscrive l'elenco.</b></p>
-        <div class="drop"><input type="file" id="set-file" accept=".xlsx,.xls"></div>
-        <div class="hint" id="set-status"></div>
-      </div>
-      <div class="card" style="grid-column:1/-1">
-        <h2><svg class="i"><use href="#i-lock"/></svg>Password parte del responsabile</h2>
-        <p class="muted" style="margin:0 0 8px;font-size:14px">Se attiva, per aprire Verifica, Statistiche, Cestino e Impostazioni serve la password. Le password delle singole firme si impostano nell'elenco «Firme».</p>
-        <div id="set-boss"></div>
-      </div>
-    </div>
-  </section>
-</div>
-</div>
-
-<dialog id="dlg">
-  <h2><svg class="i" style="color:var(--pri)"><use href="#i-pencil"/></svg>Modifica</h2>
-  <label>Codice articolo</label>
-  <div><input id="e-cod" autocomplete="off"></div>
-  <div class="grid2">
-    <div><label>Ubicazione</label><input id="e-ubi"></div>
-<div><label>Quantità</label><div class="qw"><input id="e-qty" type="number" inputmode="numeric" min="1"></div></div>
-  </div>
-  <label>Data del foglio</label>
-  <input id="e-data" type="date">
-  <label>Chi modifica</label>
-  <div class="firme-bar"></div>
-  <p class="note">Ogni modifica resta nella cronologia: chi, quando, valore vecchio e nuovo.</p>
-  <div class="grid2" style="margin-top:18px">
-    <button class="btn gray" id="e-cancel">Annulla</button>
-    <button class="btn" id="e-save"><svg class="i"><use href="#i-check"/></svg>Salva</button>
-  </div>
-</dialog>
-
-<dialog id="pwdlg">
-  <h2><svg class="i" style="color:var(--pri)"><use href="#i-lock"/></svg><span id="pw-title">Password</span></h2>
-  <p class="note" id="pw-msg" style="margin:0 0 4px"></p>
-  <label>Password</label>
-  <input id="pw-a" type="password" autocomplete="off">
-  <div id="pw-b-wrap"><label>Ripeti password</label><input id="pw-b" type="password" autocomplete="off"></div>
-  <div class="hint" id="pw-err" style="color:var(--bad)"></div>
-  <div class="grid2" style="margin-top:14px">
-    <button class="btn gray" id="pw-cancel">Annulla</button>
-    <button class="btn" id="pw-ok"><svg class="i"><use href="#i-check"/></svg>Conferma</button>
-  </div>
-</dialog>
-
-<div id="toast"></div>
+</main>
 
 <script>
+/* ================= CONFIG ================= */
+const SB_URL = 'https://fndjrfieitieqzafhyzz.supabase.co';
+const SB_KEY = 'sb_publishable_bHDKjiKAVHqW199ICw7i2g_O3olYMAr';
+const TABLE  = 'articoli';
+const SB_HEADERS = {apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`};
 
-/* ============ CONFIG ============ */
-const SUPABASE_URL = 'https://fndjrfieitieqzafhyzz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_bHDKjiKAVHqW199ICw7i2g_O3olYMAr';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { heartbeatIntervalMs: 15000 } });
-const T_ART = 'kohinoor_articoli';
-const T_MAN = 'kohinoor_articolimancanti';
-const T_ACC = 'kohinoor_accessi';
+/* ================= ALGORITM (pur, testabil) ================= */
+/*ALGO-START*/
+// Sceglie il sottoinsieme di scorte che sta entro "rem" pezzi.
+// P1: massimo numero di posizioni liberate; P2: massima quantità spostata.
+function solveSubset(rem, items){
+  let it = items.filter(x => x.qty > 0 && x.qty <= rem).sort((a,b) => a.qty - b.qty);
+  if (it.length > 24) it = it.slice(0, 24);          // limite di sicurezza (le 24 più piccole)
+  let best = null, nodes = 0;
+  const chosen = [];
+  (function rec(i, n, sum){
+    if (++nodes > 2000000) return;
+    if (n > 0 && (!best || n > best.n || (n === best.n && sum > best.sum))) best = {n, sum, pick: chosen.slice()};
+    // limite superiore: quanti elementi possono ancora entrare (prima i più piccoli)
+    let s = sum, k = 0;
+    for (let j = i; j < it.length; j++){ if (s + it[j].qty > rem) break; s += it[j].qty; k++; }
+    if (best && (n + k < best.n || (n + k === best.n && best.sum === rem))) return;
+    for (let j = i; j < it.length; j++){
+      if (sum + it[j].qty > rem) break;
+      chosen.push(it[j]); rec(j + 1, n + 1, sum + it[j].qty); chosen.pop();
+    }
+  })(0, 0, 0);
+  return best;
+}
 
-/* ============ UTILITÀ ============ */
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const pad = n => String(n).padStart(2, '0');
-const localDate = d => { d = d instanceof Date ? d : new Date(d); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
-const fmtD = s => { if (!s) return ''; const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
-const fmtDT = iso => { if (!iso) return ''; const d = new Date(iso); return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let toastT;
-function toast(msg, type = '') { const t = $('#toast'); t.textContent = msg; t.className = type; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', 3200); }
-function caps(inp) { inp.addEventListener('input', () => { const s = inp.selectionStart, e = inp.selectionEnd; inp.value = inp.value.toUpperCase(); try { inp.setSelectionRange(s, e); } catch (_) {} }); }
-async function fetchAll(make) {
-  const out = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await make().range(from, from + 999);
-    if (error) throw error;
-    out.push(...data);
-    if (data.length < 1000) break;
+// catalog: Map(articol -> {ubi, desc, cap})   stock: [{art, ubi, qty}]
+function computeTasks(catalog, stock, capFallback){
+  const byArt = new Map(), byLoc = new Map();
+  for (const r of stock){
+    if (!(r.qty > 0)) continue;
+    if (!byArt.has(r.art)) byArt.set(r.art, new Map());
+    const m = byArt.get(r.art); m.set(r.ubi, (m.get(r.ubi) || 0) + r.qty);
+    if (!byLoc.has(r.ubi)) byLoc.set(r.ubi, new Set());
+    byLoc.get(r.ubi).add(r.art);
+  }
+  const tasks = [], noCatalog = [], noCap = [], full = [], noFit = [];
+  for (const [art, locs] of byArt){
+    const c = catalog.get(art);
+    if (!c){ noCatalog.push(art); continue; }
+    const cap = c.cap || (capFallback && capFallback[art]) || null;
+    const scorte = [...locs].filter(([u]) => u !== c.ubi).map(([ubi, qty]) => ({ubi, qty}));
+    if (!scorte.length) continue;
+    if (!cap){ noCap.push(art); continue; }
+    const casellaQty = locs.get(c.ubi) || 0;
+    const rem = cap - casellaQty;
+    if (rem <= 0){ full.push(art); continue; }
+    const res = solveSubset(rem, scorte);
+    if (!res){ noFit.push(art); continue; }
+    const moves = res.pick.map(p => ({ubi: p.ubi, qty: p.qty, shared: byLoc.get(p.ubi).size > 1}))
+                          .sort((a,b) => a.ubi.localeCompare(b.ubi));
+    tasks.push({
+      id: art + '|' + moves.map(m => m.ubi + ':' + m.qty).join(',') + '>' + c.ubi,
+      art, desc: c.desc || '', dest: c.ubi, cap, casellaQty,
+      moves, total: res.sum, freed: res.n, after: casellaQty + res.sum
+    });
+  }
+  tasks.sort((a,b) => b.freed - a.freed || b.total - a.total || a.art.localeCompare(b.art));
+  return {tasks, noCatalog, noCap, full, noFit};
+}
+/*ALGO-END*/
+
+/* ================= STARE ================= */
+const S = {
+  catalog: [], noCapCol: false, loadedOnce: false,
+  stock: [], stockName: '', stockTime: null,
+  demo: false, demoCap: {},
+  filter: 'all', sort: 'prio', open: new Set(), pendingCat: null,
+  status: {}
+};
+try { S.status = JSON.parse(localStorage.getItem('abc_status') || '{}'); } catch(e){}
+try {
+  const st = JSON.parse(localStorage.getItem('abc_stock') || 'null');
+  if (st){ S.stock = st.rows; S.stockName = st.name; S.stockTime = st.time; }
+} catch(e){}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n).toLocaleString('it-IT');
+const fdt = d => d ? new Date(d).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+const q = v => '"' + String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"') + '"';
+
+function banner(text, kind){ $('banner').innerHTML = text ? `<div class="msg ${kind||'info'}" style="margin-top:12px">${text}</div>` : ''; }
+
+/* ================= SUPABASE (REST) ================= */
+async function sb(path, opt = {}){
+  const url = SB_URL + '/rest/v1/' + path;
+  const o = {...opt, headers: {...SB_HEADERS, 'Content-Type': 'application/json', ...(opt.headers || {})}};
+  let res;
+  try { res = await fetch(url, o); }
+  catch(e){                                   // iOS: "Load failed" dopo una connessione interrotta
+    if (opt.method === 'POST') throw e;       // POST non viene ritentato (rischio di duplicati)
+    await new Promise(r => setTimeout(r, 700));
+    res = await fetch(url, o);
+  }
+  if (!res.ok){
+    let t = ''; try { t = (await res.json()).message || ''; } catch(e){}
+    throw new Error(`${res.status} ${t}`.trim());
+  }
+  return res;
+}
+async function fetchAll(select){
+  const out = [], step = 1000;
+  for (let from = 0; ; from += step){
+    const res = await sb(`${TABLE}?select=${select}&order=id`, {headers: {Range: `${from}-${from + step - 1}`, 'Range-Unit': 'items'}});
+    const part = await res.json();
+    out.push(...part);
+    if (part.length < step) break;
   }
   return out;
 }
-
-/* ============ OROLOGIO ============ */
-function tick() {
-  const n = new Date();
-  $('#clock').innerHTML = `<b>${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}</b>` +
-    n.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}
-tick(); setInterval(tick, 1000);
-
-/* ============ STATO ============ */
-let articoli = [];            // [{codice, descrizione}]
-let descMap = new Map();      // CODICE_MAIUSCOLO -> descrizione
-let ubiMap = new Map();       // CODICE_MAIUSCOLO -> ubicazione dall'elenco
-let codeMap = new Map();      // CODICE_MAIUSCOLO -> codice (come nell'elenco)
-let ubiList = [];             // ubicazioni distinte dall'elenco
-let userUbi = [];             // ubicazioni scritte da me nelle segnalazioni
-const natCmp = (a, b) => a.localeCompare(b, 'it', { numeric: true, sensitivity: 'base' });
-const allUbi = () => { const s = new Set(ubiList); return [...ubiList, ...userUbi.filter(u => !s.has(u))]; };
-function addUserUbi(u) { u = (u || '').trim().toUpperCase(); if (u && !userUbi.includes(u)) userUbi.push(u); }
-async function loadUserUbi() {
+async function loadCatalog(){
   try {
-    const rows = await fetchAll(() => sb.from(T_MAN).select('ubicazione').eq('tipo', 'segnalazione').order('id'));
-    userUbi = [...new Set(rows.map(r => (r.ubicazione || '').trim().toUpperCase()).filter(Boolean))].sort(natCmp);
-  } catch (_) {}
-}
-let firme = [];               // [{id, name}]
-let firma = localStorage.getItem('kohinoor_firma') || null;
-let accessi = new Map();      // nome -> pw_hash ('__SEF__' = area responsabile)
-let accessiOk = true;         // false se la tabella kohinoor_accessi non esiste
-const unlocked = new Set(JSON.parse(sessionStorage.getItem('kohinoor_unlocked') || '[]'));
-const R = new Map();          // cache righe mostrate
-let verStato = 'nuovo';
-
-/* ============ FIRME ============ */
-async function loadFirme() {
-  await loadAccessi();
-  const { data, error } = await sb.from(T_MAN).select('id,firmatario').eq('tipo', 'firmatario').order('created_at');
-  if (error) { toast('Errore firme: ' + error.message, 'bad'); return; }
-  firme = data.map(r => ({ id: r.id, name: r.firmatario }));
-  if (firma && !firme.some(f => f.name === firma)) firma = null;
-  renderFirme();
-  const sel = $('#st-firma'), old = sel.value;
-  sel.innerHTML = '<option value="">Tutte</option>' + firme.map(f => `<option>${esc(f.name)}</option>`).join('');
-  sel.value = old;
-}
-function renderFirme() {
-  const html = firme.length
-    ? `<select class="firme-sel"><option value="">— scegli la firma —</option>${firme.map(f => `<option value="${esc(f.name)}" ${f.name === firma ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}</select>`
-    : '<span class="muted">Aggiungi le firme in Responsabile → Impostazioni</span>';
-  $$('.firme-bar').forEach(el => el.innerHTML = html);
-}
-document.addEventListener('change', async e => {
-  const s = e.target.closest('.firme-sel'); if (!s) return;
-  const nf = s.value || null;
-  if (nf && accessi.has(nf) && !unlocked.has(nf)) {
-    const ok = await pwDialog({ title: 'Password', msg: `Inserisci la password per «${nf}»`, verify: pw => checkPw(pw, accessi.get(nf)) });
-    if (!ok) { $$('.firme-sel').forEach(x => x.value = firma || ''); return; }
-    unlocked.add(nf); saveUnl();
+    S.catalog = await fetchAll('id,cod_magazzino,ubicazione,articolo,descrizione,cap_max,batch_id,uploaded_at');
+    S.noCapCol = false;
+  } catch(e){
+    if (/cap_max/i.test(e.message)){
+      S.catalog = await fetchAll('id,cod_magazzino,ubicazione,articolo,descrizione,batch_id,uploaded_at');
+      S.noCapCol = true;
+    } else throw e;
   }
-  firma = nf;
-  if (firma) localStorage.setItem('kohinoor_firma', firma); else localStorage.removeItem('kohinoor_firma');
-  $$('.firme-sel').forEach(x => x.value = firma || '');
-});
-function needFirma() { if (!firma) { toast('Scegli prima la firma', 'bad'); return null; } return firma; }
-
-/* ============ ELENCO ARTICOLI ============ */
-async function loadArticoli() {
-  const { count, error } = await sb.from(T_ART).select('id', { count: 'exact', head: true });
-  if (error) { toast('Errore articoli: ' + error.message, 'bad'); return; }
-  const pages = Math.ceil((count || 0) / 1000);
-  const parts = await Promise.all(Array.from({ length: pages }, (_, i) =>
-    sb.from(T_ART).select('codice,descrizione,ubicazione').order('id').range(i * 1000, i * 1000 + 999).then(r => { if (r.error) throw r.error; return r.data; })));
-  articoli = parts.flat();
-  descMap = new Map(); codeMap = new Map(); ubiMap = new Map();
-  for (const a of articoli) { const u = a.codice.toUpperCase(); descMap.set(u, a.descrizione || ''); codeMap.set(u, a.codice); ubiMap.set(u, (a.ubicazione || '').toUpperCase()); }
-  ubiList = [...new Set(ubiMap.values())].filter(Boolean).sort(natCmp);
-  $('#set-count').textContent = `Articoli nel sistema: ${articoli.length.toLocaleString('it-IT')}`;
+  S.loadedOnce = true;
 }
-function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt = {}) {
-  const wrap = document.createElement('div'); wrap.className = 'sw';
-  inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
-  const box = document.createElement('div'); box.className = 'sugg'; box.hidden = true; wrap.appendChild(box);
-  if (!opt.prefix) {
-    wrap.classList.add('hasclr');
-    const clr = document.createElement('button');
-    clr.type = 'button'; clr.className = 'clr'; clr.setAttribute('aria-label', 'Cancella');
-    clr.innerHTML = '<svg class="i"><use href="#i-x"/></svg>';
-    wrap.appendChild(clr);
-    const sync = () => wrap.classList.toggle('filled', !!inp.value);
-    inp.addEventListener('input', sync);
-    clr.addEventListener('pointerdown', e => {
-      e.preventDefault();
-      inp.value = ''; box.hidden = true; sync();
-      if (hintEl) hintEl.innerHTML = '';
-      inp.focus();
-    });
-    new MutationObserver(() => {}).disconnect();
-    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-    Object.defineProperty(inp, 'value', {
-      get() { return desc.get.call(this); },
-      set(v) { desc.set.call(this, v); sync(); }
-    });
-  }
-  const check = () => {
-    const v = inp.value.trim().toUpperCase();
-    const known = codeMap.has(v);
-    if (!hintEl) return;
-    if (!v || !articoli.length) hintEl.innerHTML = '';
-    else if (known) hintEl.innerHTML = '<span style="color:var(--ok)">✓ articolo presente nell\'elenco</span>';
-    else hintEl.innerHTML = '<span style="color:var(--warn)">⚠ non è nell\'elenco</span>';
-  };
-  inp.addEventListener('input', () => {
-    const q = inp.value.trim().toLowerCase(); check();
-    if (!q) { box.hidden = true; return; }
-    const m = [];
-    for (const v of src()) {
-      const c = v.toLowerCase(), i = c.indexOf(q);
-      if (opt.prefix ? i === 0 : i >= 0) m.push({ c: v, g: c === q ? 0 : i === 0 ? 1 : 2, i });
+
+/* ================= EXCEL ================= */
+const norm = k => String(k).toLowerCase().replace(/[^a-z]/g, '');
+function pick(row, names){
+  for (const k of Object.keys(row)) if (names.includes(norm(k))) return row[k];
+  return undefined;
+}
+const clean = v => { const s = String(v ?? '').trim(); return s === '' ? null : s; };
+async function readSheet(file){
+  const wb = XLSX.read(await file.arrayBuffer(), {type: 'array'});
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval: ''});
+}
+function parseNum(v){
+  if (typeof v === 'number') return v;
+  const n = Number(String(v).replace(/\s/g, '').replace(',', '.'));
+  return isFinite(n) ? n : NaN;
+}
+
+/* ================= CATALOGO: upload e sostituzione ================= */
+function catMap(){
+  const m = new Map();
+  for (const r of S.catalog) if (r.articolo) m.set(r.articolo, {ubi: r.ubicazione, desc: r.descrizione, cap: r.cap_max || null});
+  return m;
+}
+async function onCatFile(e){
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const raw = await readSheet(f);
+    const rows = [];
+    for (const r of raw){
+      const ubi = clean(pick(r, ['codubicazione','ubicazione','ubicazioni']));
+      if (!ubi) continue;
+      const capRaw = pick(r, ['capacitate','capacitatemax','capmax','capacitatemaxpicking','capacitatemaxcasela']);
+      const cap = capRaw === undefined || capRaw === '' ? null : parseNum(capRaw);
+      rows.push({
+        cod_magazzino: clean(pick(r, ['codmagazzino','magazzino','mag'])),
+        ubicazione: ubi,
+        articolo: clean(pick(r, ['articolo','codarticol','cod'])),
+        descrizione: clean(pick(r, ['descrizione','denumire','descriere'])),
+        capFile: cap > 0 ? Math.round(cap) : null
+      });
     }
-    const cmp = (x, y) => x.c.localeCompare(y.c, 'it', { numeric: true, sensitivity: 'base' });
-    if (!opt.prefix) m.sort((x, y) => x.g - y.g || x.i - y.i || cmp(x, y));
-    if (opt.first) {
-      const p = (opt.first() || '').toUpperCase();
-      if (p && p.toLowerCase().startsWith(q)) {
-        const k = m.findIndex(x => x.c.toUpperCase() === p);
-        if (k >= 0) m.splice(k, 1);
-        m.unshift({ c: p, own: true });
+    if (!rows.length) throw new Error('Nessuna riga valida trovata. Controlla le intestazioni delle colonne.');
+    if (!S.loadedOnce) await loadCatalog();
+    const old = catMap();
+    const seen = new Set(); let dup = 0;
+    for (const r of rows) if (r.articolo){ if (seen.has(r.articolo)) dup++; seen.add(r.articolo); }
+    let keep = 0, fromFile = 0;
+    for (const r of rows){
+      if (!r.articolo){ r.cap_max = null; continue; }
+      if (r.capFile){ r.cap_max = r.capFile; fromFile++; }
+      else if (old.get(r.articolo)?.cap){ r.cap_max = old.get(r.articolo).cap; keep++; }
+      else r.cap_max = null;
+    }
+    S.pendingCat = rows;
+    const withArt = rows.filter(r => r.articolo).length;
+    $('catPreview').innerHTML = `<div class="msg info"><b>${esc(f.name)}</b>: ${fmt(rows.length)} righe, ${fmt(withArt)} articoli, ${fmt(rows.length - withArt)} ubicazioni vuote.
+      Capacità: ${fmt(fromFile)} dal file, ${fmt(keep)} mantenute dal catalogo attuale.
+      ${dup ? `<br><b>Attenzione:</b> ${fmt(dup)} codici articolo compaiono più volte.` : ''}
+      <br>Il catalogo attuale (${fmt(S.catalog.length)} righe) verrà sostituito completamente.</div>
+      <div class="row"><button class="btn pri" id="btnCatConfirm">Conferma sostituzione</button><button class="btn" id="btnCatCancel">Annulla</button></div>`;
+    $('btnCatConfirm').onclick = confirmCatalog;
+    $('btnCatCancel').onclick = () => { S.pendingCat = null; $('catPreview').innerHTML = ''; };
+  } catch(err){ $('catPreview').innerHTML = `<div class="msg err">${esc(err.message)}</div>`; }
+}
+async function confirmCatalog(){
+  const rows = S.pendingCat; if (!rows) return;
+  const batch = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const when = new Date().toISOString();
+  const payload = rows.map(r => {
+    const o = {cod_magazzino: r.cod_magazzino, ubicazione: r.ubicazione, articolo: r.articolo, descrizione: r.descrizione, batch_id: batch, uploaded_at: when};
+    if (!S.noCapCol) o.cap_max = r.cap_max;
+    return o;
+  });
+  const btns = $('catPreview').querySelectorAll('button'); btns.forEach(b => b.disabled = true);
+  try {
+    for (let i = 0; i < payload.length; i += 500){
+      $('catPreview').firstElementChild.textContent = `Caricamento… ${Math.min(i + 500, payload.length)} / ${payload.length}`;
+      await sb(TABLE, {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify(payload.slice(i, i + 500))});
+    }
+    // solo dopo l'inserimento completo dei nuovi dati, cancelliamo tutto ciò che non appartiene al nuovo lotto
+    await sb(`${TABLE}?or=(batch_id.is.null,batch_id.neq.${encodeURIComponent(batch)})`, {method: 'DELETE'});
+    S.pendingCat = null;
+    await loadCatalog();
+    $('catPreview').innerHTML = `<div class="msg ok">Catalogo aggiornato: ${fmt(payload.length)} righe.</div>`;
+    renderAll();
+  } catch(err){
+    try { await sb(`${TABLE}?batch_id=eq.${encodeURIComponent(batch)}`, {method: 'DELETE'}); } catch(e){}
+    $('catPreview').innerHTML = `<div class="msg err">Errore: ${esc(err.message)}. Il vecchio catalogo è rimasto invariato.</div>`;
+  }
+}
+function downloadCatalog(){
+  const data = S.catalog.map(r => ({'Cod Magazzino': r.cod_magazzino, 'Cod ubicazione': r.ubicazione, 'Articolo': r.articolo || '', 'Descrizione': r.descrizione || '', 'Capacitate': r.cap_max || ''}));
+  const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Catalogo');
+  XLSX.writeFile(wb, 'catalogo_articoli.xlsx');
+}
+async function saveCap(art, val){
+  const n = val === '' ? null : Math.round(Number(val));
+  if (n !== null && !(n > 0)) return renderCatalog();
+  if (!confirm(`Salvare capacità ${n === null ? '(vuota)' : n + ' pz'} per ${art}?`)) return renderCatalog();
+  const prev = S.catalog.find(r => r.articolo === art)?.cap_max ?? null;
+  const prevDemo = S.demoCap[art];
+  const apply = v => S.catalog.forEach(r => { if (r.articolo === art) r.cap_max = v; });
+  // aggiornamento immediato nell'app (le Attività si ricalcolano), poi salvataggio su Supabase
+  apply(n); delete S.demoCap[art];
+  renderCatalogInfo(); renderTasks();
+  try {
+    const res = await sb(`${TABLE}?articolo=eq.${encodeURIComponent(art)}&select=id`, {method: 'PATCH', headers: {Prefer: 'return=representation'}, body: JSON.stringify({cap_max: n})});
+    const done = await res.json();
+    if (!done.length) throw new Error('0 righe aggiornate. Controlla la policy UPDATE su Supabase (esegui setup_articoli.sql)');
+  } catch(err){
+    apply(prev); if (prevDemo !== undefined) S.demoCap[art] = prevDemo;
+    renderCatalog(); renderCatalogInfo(); renderTasks();
+    banner('Impossibile salvare la capacità (ripristinato il valore precedente): ' + esc(err.message), 'err');
+  }
+}
+async function fillCaps(){
+  const v = Math.round(Number(prompt('Capacità max. per tutti gli articoli senza capacità (pz):', '300')));
+  if (!(v > 0)) return;
+  if (!confirm(`Impostare capacità ${v} pz a TUTTI gli articoli senza capacità?`)) return;
+  try {
+    await sb(`${TABLE}?articolo=not.is.null&cap_max=is.null`, {method: 'PATCH', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({cap_max: v})});
+    await loadCatalog(); renderAll();
+    banner(`Capacità ${v} impostata sugli articoli che ne erano privi. Puoi modificarla singolarmente.`, 'ok');
+  } catch(err){ banner('Errore: ' + esc(err.message), 'err'); }
+}
+
+function exportCaps(){
+  const m = new Map();
+  for (const r of S.catalog) if (r.articolo && r.cap_max && !m.has(r.articolo))
+    m.set(r.articolo, {'Articolo': r.articolo, 'Descrizione': r.descrizione || '', 'Capacitate': r.cap_max});
+  if (!m.size) return banner('Nessun articolo con capacità da esportare.', 'err');
+  const ws = XLSX.utils.json_to_sheet([...m.values()]), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Capacita');
+  XLSX.writeFile(wb, 'capacita_max_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+async function onCapFile(e){
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const raw = await readSheet(f), imp = new Map();
+    for (const r of raw){
+      const art = clean(pick(r, ['articolo','codarticol','cod']));
+      const cap = parseNum(pick(r, ['capacitate','capacitatemax','capmax','capacita','cap']));
+      if (art && cap > 0) imp.set(art, Math.round(cap));
+    }
+    if (!imp.size) throw new Error('Nessuna riga valida (colonne: Articolo, Capacitate).');
+    if (!S.loadedOnce) await loadCatalog();
+    const exist = new Set(S.catalog.filter(r => r.articolo).map(r => r.articolo));
+    const ok = [...imp].filter(([a]) => exist.has(a));
+    const skipped = imp.size - ok.length;
+    if (!ok.length) throw new Error('Nessun articolo del file esiste nel catalogo.');
+    $('catPreview').innerHTML = `<div class="msg info"><b>${esc(f.name)}</b>: ${fmt(ok.length)} articoli esistenti riceveranno la capacità (sovrascritta se già presente).
+      ${skipped ? `<br>${fmt(skipped)} articoli non presenti nel catalogo verranno ignorati.` : ''}</div>
+      <div class="row"><button class="btn pri" id="btnCapConfirm">Conferma importazione</button><button class="btn" id="btnCapCancel">Annulla</button></div>`;
+    $('btnCapCancel').onclick = () => { $('catPreview').innerHTML = ''; };
+    $('btnCapConfirm').onclick = () => confirmCaps(ok);
+  } catch(err){ $('catPreview').innerHTML = `<div class="msg err">${esc(err.message)}</div>`; }
+}
+async function confirmCaps(ok){
+  $('catPreview').querySelectorAll('button').forEach(b => b.disabled = true);
+  try {
+    const byCap = new Map();
+    for (const [a, c] of ok){ if (!byCap.has(c)) byCap.set(c, []); byCap.get(c).push(a); }
+    let rowsDone = 0;
+    for (const [cap, arts] of byCap){
+      for (let i = 0; i < arts.length; i += 80){
+        const list = arts.slice(i, i + 80).map(a => encodeURIComponent(q(a))).join(',');
+        const res = await sb(`${TABLE}?articolo=in.(${list})&select=id`, {method: 'PATCH', headers: {Prefer: 'return=representation'}, body: JSON.stringify({cap_max: cap})});
+        rowsDone += (await res.json()).length;
       }
     }
-    const list = m.slice(0, 8);
-    box.innerHTML = list.map(x => `<div data-v="${esc(x.c)}"${x.own ? ' class="own" title="Ubicazione dell\'articolo"' : ''}>${x.own ? '<svg class="i"><use href="#i-box"/></svg>' : ''}${esc(x.c)}</div>`).join('');
-    box.hidden = !list.length;
-  });
-  box.addEventListener('pointerdown', e => {
-    const d = e.target.closest('div'); if (!d) return; e.preventDefault();
-    inp.value = d.dataset.v; box.hidden = true; check();
-  });
-  inp.addEventListener('keydown', e => {
-    if (e.key !== 'Enter' || box.hidden) return;
-    const first = box.querySelector('div'); if (!first) return;
-    e.preventDefault(); e.stopPropagation();
-    inp.value = first.dataset.v; box.hidden = true; check();
-  });
-  inp.addEventListener('blur', () => setTimeout(() => box.hidden = true, 150));
+    if (!rowsDone) throw new Error('0 righe aggiornate. Controlla la policy UPDATE su Supabase.');
+    await loadCatalog(); renderAll();
+    $('catPreview').innerHTML = `<div class="msg ok">Capacità importata su ${fmt(ok.length)} articoli (${fmt(rowsDone)} righe aggiornate).</div>`;
+  } catch(err){ $('catPreview').innerHTML = `<div class="msg err">Errore: ${esc(err.message)}</div>`; }
 }
 
-/* ============ RIGHE ============ */
-const LAB = { codice: 'Codice', ubicazione: 'Ubicazione', quantita: 'Quantità', firmatario: 'Firma', data_foglio: 'Data foglio', eliminato: 'Eliminato' };
-function histHTML(r) {
-  const h = r.storico || [];
-  let q0 = r.quantita;
-  const fq = h.flatMap(e => e.cambi).find(c => c.campo === 'quantita'); if (fq) q0 = fq.da;
-  let s = `<div><b>Inserito:</b> ${fmtDT(r.created_at)} · ${esc(r.firmatario)} · quantità iniziale <b>-${q0}</b></div>`;
-  for (const e of h) {
-    s += `<div>✎ ${fmtDT(e.quando)} · ${esc(e.chi || '?')}: ` + e.cambi.map(c => {
-      if (c.campo === 'eliminato') return c.a ? 'spostato nel cestino' : 'ripristinato dal cestino';
-      const f = x => c.campo === 'data_foglio' ? fmtD(x) : c.campo === 'quantita' ? '-' + esc(x) : esc(x ?? '—');
-      return `${LAB[c.campo] || c.campo}: <b>${f(c.da)}</b> → <b>${f(c.a)}</b>`;
-    }).join('; ') + '</div>';
-  }
-  if (r.sc_richiesto_il) s += `<div>↻ Seconda spunta richiesta: ${fmtDT(r.sc_richiesto_il)}</div>`;
-  if (r.sc_fatto_il) s += `<div>✔ Seconda spunta eseguita: ${fmtDT(r.sc_fatto_il)} da ${esc(r.sc_fatto_da || '?')}</div>`;
-  if (r.confermato_il) s += `<div>✓ Confermato dal responsabile: ${fmtDT(r.confermato_il)}</div>`;
-  if (r.eliminato_il) s += `<div>🗑 Nel cestino dal: ${fmtDT(r.eliminato_il)}</div>`;
-  return s;
+/* ================= GIACENZA ================= */
+function setStock(rows, name, demo){
+  S.stock = rows; S.stockName = name; S.stockTime = new Date().toISOString(); S.demo = !!demo;
+  if (!demo) S.demoCap = {};
+  try { if (!demo) localStorage.setItem('abc_stock', JSON.stringify({rows, name, time: S.stockTime})); } catch(e){}
+  renderAll();
 }
-const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
-function rowHTML(r, ctx) {
-  R.set(r.id, r);
-  const boss = ctx === 'ver' || ctx === 'trash';
-  const desc = boss ? (descMap.get((r.codice || '').toUpperCase()) || '') : '';
-  const retro = r.data_foglio !== localDate(r.created_at);
-  const st = { nuovo: ['Nuovo', ''], sc_richiesta: ['Seconda spunta richiesta', 'warn'], sc_fatta: ['Seconda spunta eseguita', 'info'], confermato: ['Confermato', 'ok'] }[r.stato] || ['', ''];
-  let b = '';
-  if (r.eliminato) b += `<span class="bd bad">${ic('trash')}Eliminato</span>`;
-  b += `<span class="bd ${st[1]}">${r.stato === 'confermato' ? ic('check') : ''}${st[0]}</span>`;
-  if (r.modificato_n > 0) b += `<button class="bd bad" data-act="hist" title="Vedi la cronologia delle modifiche">${ic('pencil')}Modificato ×${r.modificato_n}</button>`;
-  if (retro) b += `<span class="bd warn" title="La data del foglio (${fmtD(r.data_foglio)}) è diversa dalla data di inserimento (${fmtD(localDate(r.created_at))})">${ic('alert')}Altra data</span>`;
-    if (ctx === 'trash' && r.eliminato_il) {
-    const age = Math.floor((Date.now() - new Date(r.eliminato_il)) / 864e5);
-    const old = trashDays() > 0 && age >= trashDays();
-    b += `<span class="bd ${old ? 'bad' : ''}">${ic('clock')}Nel cestino da ${age} gg${old ? ' · vecchio' : ''}</span>`;
-  }
-
-  const dl = ctx === 'ver' ? (DUP.get(r.codice) || []) : [];
-  if (dl.length) {
-    const nd = new Set(dl.map(x => x.data_foglio)).size;
-    b += `<button class="bd warn" data-act="dup" title="Articolo segnalato più volte">${ic('alert')}Ripetuto ×${dl.length}${nd > 1 ? ' · ' + nd + ' giorni' : ''}</button>`;
-  }
-  const btn = (a, icon, t, c = '') => `<button class="btn sm ${c}" data-act="${a}" title="${t}">${ic(icon)}<span>${t}</span></button>`;
-  let a = '';
-  if (ctx === 'ins') a = btn('edit', 'pencil', 'Modifica', 'ghost') + btn('del', 'trash', 'Elimina', 'ghost bad');
-  if (ctx === 'sc') a = btn('edit', 'pencil', 'Modifica', 'ghost') + btn('verify', 'check', 'Verificato', 'ok');
-  if (ctx === 'cerca' && !r.eliminato) a = btn('edit', 'pencil', 'Modifica', 'ghost') + btn('del', 'trash', 'Elimina', 'ghost bad');
-  if (ctx === 'ver') {
-    if (r.stato !== 'sc_richiesta' && r.stato !== 'confermato') a += btn('sc', 'refresh', 'Seconda spunta', 'ghost warn');
-    if (r.stato !== 'confermato') a += btn('confirm', 'check', 'Conferma', 'ok');
-  }
-  if (ctx === 'trash') a = btn('restore', 'undo', 'Ripristina', 'ghost');
-  const hasHist = (r.storico && r.storico.length) || r.sc_fatto_il || r.confermato_il || r.sc_richiesto_il || r.eliminato_il;
-  if (hasHist && r.modificato_n === 0) b += `<button class="bd" data-act="hist" title="Vedi la cronologia">${ic('clock')}Cronologia</button>`;
-  return `<div class="row ${r.eliminato ? 'deleted' : ''} ${dl.length ? 'dup' : ''}" data-id="${r.id}">
-<div class="c-main">${ctx === 'ver' || ctx === 'trash' ? '<input type="checkbox" class="sel" aria-label="Seleziona">' : ''}<div><b class="code">${esc(r.codice)}</b>${desc ? `<small>${esc(desc)}</small>` : ''}</div></div>
-    <div class="c-ubi">${r.ubicazione ? ic('pin') + esc(r.ubicazione) : '<span class="dash">—</span>'}</div>
-
-    <div class="c-qty"><b>-${r.quantita}</b></div>
-    <div class="c-who">${ic('user')}${esc(r.firmatario)}</div>
-    <div class="c-date">${ic('cal')}${fmtD(r.data_foglio)}<small>inserito ${fmtDT(r.created_at)}</small></div>
-    <div class="c-bd">${b}</div>
-    <div class="acts">${a}</div>
-    <div class="hist" hidden></div>
-  </div>`;
-}
-const emptyMsg = t => `<div class="empty">${ic('box')}<div>${t}</div></div>`;
-const HEAD = '<div class="rowhead"><div>Articolo</div><div>Ubicazione</div><div>Q.tà</div><div>Firma</div><div>Data foglio</div><div>Stato</div><div></div></div>';
-function renderList(el, rows, ctx, msg) { el.innerHTML = rows.length ? HEAD + rows.map(r => rowHTML(r, ctx)).join('') : emptyMsg(msg || 'Niente da mostrare'); }
-
-/* ============ AZIONI SULLE RIGHE ============ */
-async function upd(id, patch) {
-  const { error } = await sb.from(T_MAN).update(patch).eq('id', id);
-  if (error) { toast(error.message, 'bad'); return false; }
-  return true;
-}
-let editRow = null;
-document.addEventListener('click', async e => {
-  const b = e.target.closest('[data-act]'); if (!b) return;
-  const rowEl = b.closest('.row'); const r = R.get(rowEl.dataset.id); if (!r) return;
-  const act = b.dataset.act;
-  if (act === 'dup') {
-    const h = $('.hist', rowEl); h.hidden = !h.hidden; if (!h.hidden) h.innerHTML = dupHTML(r); return;
-  }
-  if (act === 'hist') {
-    const h = $('.hist', rowEl); h.hidden = !h.hidden; if (!h.hidden) h.innerHTML = histHTML(r); return;
-  }
-  if (act === 'edit') {
-    editRow = r; $('#e-cod').value = r.codice; $('#e-ubi').value = r.ubicazione || ''; $('#e-qty').value = r.quantita; $('#e-data').value = r.data_foglio;
-    renderFirme(); $('#dlg').showModal(); return;
-  }
-  if (act === 'del') {
-    const f = needFirma(); if (!f) return;
-    if (!confirm(`Spostare nel cestino ${r.codice} (q.tà -${r.quantita})?`)) return;
-    if (await upd(r.id, { eliminato: true, modificato_da: f })) { toast('Spostato nel cestino', 'ok'); refresh(); }
-  }
-  if (act === 'restore') { if (await upd(r.id, { eliminato: false, modificato_da: 'Responsabile' })) { toast('Ripristinato', 'ok'); refresh(); } }
-  if (act === 'verify') {
-    const f = needFirma(); if (!f) return;
-    if (await upd(r.id, { stato: 'sc_fatta', sc_fatto_da: f })) { toast('Seconda spunta registrata', 'ok'); refresh(); }
-  }
-  if (act === 'confirm') { if (await upd(r.id, { stato: 'confermato' })) { toast('Confermato', 'ok'); refresh(); } }
-  if (act === 'sc') { if (await upd(r.id, { stato: 'sc_richiesta' })) { toast('Seconda spunta richiesta', 'ok'); refresh(); } }
-});
-
-/* ---- finestra di modifica ---- */
-$('#e-cancel').onclick = () => $('#dlg').close();
-$('#e-save').onclick = async () => {
-  const f = needFirma(); if (!f || !editRow) return;
-  const codice = $('#e-cod').value.trim(), ubic = $('#e-ubi').value.trim().toUpperCase(), q = parseInt($('#e-qty').value, 10), d = $('#e-data').value;
-  if (!codice || !(q > 0) || !d) return toast('Compila codice, quantità e data', 'bad');
-  const patch = {};
-  const canon = codeMap.get(codice.toUpperCase()) || codice;
-  if (canon !== editRow.codice) patch.codice = canon;
-  if (ubic !== (editRow.ubicazione || '')) patch.ubicazione = ubic;
-  if (q !== editRow.quantita) patch.quantita = q;
-  if (d !== editRow.data_foglio) patch.data_foglio = d;
-  if (!Object.keys(patch).length) { $('#dlg').close(); return; }
-  patch.modificato_da = f;
-  if (await upd(editRow.id, patch)) { addUserUbi(ubic); $('#dlg').close(); toast('Modifica salvata (compare nella cronologia)', 'ok'); refresh(); }
-};
-
-/* ============ INSERIMENTO ============ */
-async function saveIns() {
-  const f = needFirma(); if (!f) return;
-  let codice = $('#f-cod').value.trim(); const ubic = $('#f-ubi').value.trim().toUpperCase();
-  const q = parseInt($('#f-qty').value, 10), d = $('#f-data').value;
-  if (!codice) return toast('Scrivi il codice dell\'articolo', 'bad');
-  if (!(q > 0)) return toast('Scrivi la quantità', 'bad');
-  if (!d) return toast('Scegli la data', 'bad');
-  const known = codeMap.get(codice.toUpperCase());
-  if (known) codice = known;
-  else if (articoli.length && !confirm(`«${codice}» non è nell'elenco articoli. Salvare comunque?`)) return;
-  const btn = $('#f-save'); btn.disabled = true;
-  const { data: dup } = await sb.from(T_MAN).select('quantita,firmatario').eq('tipo', 'segnalazione').eq('eliminato', false).eq('codice', codice).eq('data_foglio', d).limit(5);
-  if (dup && dup.length) {
-    const lista = dup.map(x => `-${x.quantita} (${esc(x.firmatario)})`).join(', ');
-    if (!confirm(`«${codice}» è già stato inserito per il foglio del ${fmtD(d)}: ${lista}.\nAggiungerlo comunque?`)) { btn.disabled = false; return; }
-  }
-  const { error } = await sb.from(T_MAN).insert({ tipo: 'segnalazione', codice, ubicazione: ubic, quantita: q, firmatario: f, data_foglio: d, modificato_da: f });
-  btn.disabled = false;
-  if (error) return toast(error.message, 'bad');
-  toast('Salvato ✓', 'ok'); addUserUbi(ubic);
-  $('#f-cod').value = ''; $('#f-ubi').value = ''; $('#f-qty').value = ''; $('#f-data').value = localDate(new Date()); $('#f-hint').innerHTML = '';
-  $('#f-cod').focus(); loadRecent(); loadCounts();
-}
-$('#f-save').onclick = saveIns;
-$('#f-qty').addEventListener('keydown', e => { if (e.key === 'Enter') saveIns(); });
-
-async function loadRecent() {
-  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).neq('stato', 'confermato').order('created_at', { ascending: false }).limit(10);
-  if (error) return toast(error.message, 'bad');
-  renderList($('#recent'), data, 'ins', 'Nessuna registrazione per ora');
-}
-async function loadSc() {
-  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', 'sc_richiesta').order('created_at');
-  if (error) return toast(error.message, 'bad');
-  renderList($('#sc-list'), data, 'sc', 'Nessuna seconda spunta richiesta 🎉');
-}
-async function loadCounts() {
-  const q = st => sb.from(T_MAN).select('id', { count: 'exact', head: true }).eq('tipo', 'segnalazione').eq('eliminato', false).in('stato', st);
-  const [a, b] = await Promise.all([q(['sc_richiesta']), q(['nuovo', 'sc_fatta'])]);
-  const sc = $('#cnt-sc'); sc.dataset.n = a.count || 0; sc.textContent = a.count || '';
-  const ve = $('#cnt-ver'); ve.dataset.n = b.count || 0; ve.textContent = b.count || '';
-}
-
-
-/* ============ RICERCA ============ */
-let qT;
-$('#q-cerca').addEventListener('input', () => { clearTimeout(qT); qT = setTimeout(doSearch, 300); });
-async function doSearch() {
-  const q = $('#q-cerca').value.trim().replace(/[%,()*_]/g, '');
-  if (!q) { $('#cerca-list').innerHTML = ''; $('#q-sum').textContent = 'Scrivi un codice per vedere la cronologia.'; return; }
-  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').ilike('codice', `%${q}%`).order('created_at', { ascending: false }).limit(300);
-  if (error) return toast(error.message, 'bad');
-  const act = data.filter(r => !r.eliminato);
-  const days = new Set(act.map(r => r.data_foglio)).size;
-  $('#q-sum').textContent = data.length ? `${act.length} segnalazioni attive in ${days} giorni diversi · ${data.length - act.length} nel cestino · ${data.filter(r => r.modificato_n > 0).length} modificate` : '';
-  renderList($('#cerca-list'), data, 'cerca', 'Nessun risultato');
-}
-
-/* ============ RESPONSABILE · VERIFICA ============ */
-const STATI = [['nuovo', 'Nuovi'], ['sc_richiesta', 'Seconda spunta richiesta'], ['sc_fatta', 'Seconda spunta eseguita'], ['confermato', 'Confermati']];
-
-const DUP = new Map();
-async function loadDup(rows) {
-  DUP.clear();
-  const codes = [...new Set(rows.map(r => r.codice))];
-  for (let i = 0; i < codes.length; i += 80) {
-    const { data } = await sb.from(T_MAN).select('id,codice,quantita,firmatario,data_foglio,stato').eq('tipo', 'segnalazione').eq('eliminato', false).in('codice', codes.slice(i, i + 80));
-    (data || []).forEach(x => { if (!DUP.has(x.codice)) DUP.set(x.codice, []); DUP.get(x.codice).push(x); });
-  }
-  for (const [k, v] of [...DUP]) if (v.length < 2) DUP.delete(k);
-}
-function dupHTML(r) {
-  const nomi = { nuovo: 'Nuovo', sc_richiesta: 'Seconda spunta richiesta', sc_fatta: 'Seconda spunta eseguita', confermato: 'Confermato' };
-  const all = DUP.get(r.codice) || [];
-  const altri = all.filter(x => x.id !== r.id).sort((a, b) => b.data_foglio.localeCompare(a.data_foglio));
-  const tot = all.reduce((s, x) => s + x.quantita, 0);
-  return `<div><b>Altre segnalazioni di ${esc(r.codice)}</b> (totale con questa: <b>-${tot}</b>)</div>` +
-    altri.map(x => `<div>↺ ${fmtD(x.data_foglio)} · ${esc(x.firmatario)} · <b>-${x.quantita}</b> · ${nomi[x.stato] || x.stato}</div>`).join('');
-}
-
-async function loadVer() {
-  const counts = await Promise.all(STATI.map(([s]) => sb.from(T_MAN).select('id', { count: 'exact', head: true }).eq('tipo', 'segnalazione').eq('eliminato', false).eq('stato', s).then(r => r.count || 0)));
-  $('#ver-chips').innerHTML = STATI.map(([s, l], i) => `<button class="chip ${s === verStato ? 'on' : ''}" data-ver="${s}">${l} (${s === 'nuovo' ? counts[0] + counts[2] : counts[i]})</button>`).join('');
-  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', false).in('stato', verStato === 'nuovo' ? ['nuovo', 'sc_fatta'] : [verStato]).order('created_at', { ascending: false }).limit(200);
-
-  if (error) return toast(error.message, 'bad');
-  if (verStato === 'nuovo') data.sort((a, b) => (b.stato === 'sc_fatta') - (a.stato === 'sc_fatta'));
-  await loadDup(data);
-  renderList($('#ver-list'), data, 'ver', 'Niente in questa categoria');
-}
-document.addEventListener('click', e => { const c = e.target.closest('[data-ver]'); if (c) { verStato = c.dataset.ver; loadVer(); } });
-$('#ver-all').onclick = () => { const cb = $$('#ver-list .sel'); const all = cb.every(x => x.checked); cb.forEach(x => x.checked = !all); };
-async function bulk(stato) {
-  const ids = $$('#ver-list .sel:checked').map(x => x.closest('.row').dataset.id);
-  if (!ids.length) return toast('Seleziona almeno una riga', 'bad');
-  const { error } = await sb.from(T_MAN).update({ stato }).in('id', ids);
-  if (error) return toast(error.message, 'bad');
-  toast(`${ids.length} righe aggiornate`, 'ok'); refresh();
-}
-$('#ver-conf').onclick = () => bulk('confermato');
-$('#ver-sc').onclick = () => bulk('sc_richiesta');
-
-/* ============ RESPONSABILE · STATISTICHE ============ */
-let statRows = [], statTop = [];
-async function loadStat() {
-  if (!$('#st-from').value) { const d = new Date(); d.setDate(d.getDate() - 30); $('#st-from').value = localDate(d); $('#st-to').value = localDate(new Date()); }
-  if (!$('#st-table').children.length) $('#st-table').innerHTML = emptyMsg('Caricamento…');
-  const from = $('#st-from').value, to = $('#st-to').value, fi = $('#st-firma').value, cod = $('#st-cod').value.trim().replace(/[%,()*_]/g, ''), del = $('#st-del').checked;
+async function onStockFile(e){
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
   try {
-    statRows = await fetchAll(() => {
-      let q = sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').order('created_at', { ascending: false });
-      if (from) q = q.gte('data_foglio', from); if (to) q = q.lte('data_foglio', to);
-      if (fi) q = q.eq('firmatario', fi); if (cod) q = q.ilike('codice', `%${cod}%`);
-      if (!del) q = q.eq('eliminato', false);
-      return q;
-    });
-  } catch (err) { return toast(err.message, 'bad'); }
-  const m = new Map();
-  for (const r of statRows) {
-    const x = m.get(r.codice) || { codice: r.codice, n: 0, qty: 0, last: '' };
-    x.n++; x.qty += r.quantita; if (r.data_foglio > x.last) x.last = r.data_foglio; m.set(r.codice, x);
-  }
-  statTop = [...m.values()].sort((a, b) => b.n - a.n || b.qty - a.qty);
-  const tot = statRows.reduce((s, r) => s + r.quantita, 0), max = statTop[0]?.n || 1;
-  $('#st-kpi').innerHTML = `<div class="kpi"><b>${statRows.length}</b><span>segnalazioni</span></div><div class="kpi"><b>-${tot}</b><span>quantità totale</span></div><div class="kpi"><b>${statTop.length}</b><span>articoli distinti</span></div>`;
-  $('#st-table').innerHTML = statTop.length ? `<table><thead><tr><th>#</th><th>Articolo</th><th class="n">Volte</th><th class="n">Q.tà</th><th>Ultima</th><th style="width:25%"></th></tr></thead><tbody>` +
-    statTop.map((x, i) => `<tr class="clk" data-goto="${esc(x.codice)}"><td>${i + 1}</td><td><b>${esc(x.codice)}</b><br><span class="muted">${esc(descMap.get(x.codice.toUpperCase()) || '')}</span></td><td class="n"><b>${x.n}</b></td><td class="n">-${x.qty}</td><td>${fmtD(x.last)}</td><td><div class="bar2" style="width:${Math.round(x.n / max * 100)}%"></div></td></tr>`).join('') + '</tbody></table>'
-    : emptyMsg('Nessuna registrazione per i filtri scelti');
-}
-$('#st-go').onclick = loadStat;
-$('#st-print').onclick = () => {
-  if (!statTop.length) return toast('Niente da stampare', 'bad');
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const tot = statRows.reduce((s, r) => s + r.quantita, 0);
-  const fi = $('#st-firma').value;
-  doc.setFontSize(16); doc.text('Mancanze - Statistiche', 40, 40);
-  doc.setFontSize(10);
-  doc.text(`Periodo: ${fmtD($('#st-from').value)} - ${fmtD($('#st-to').value)}${fi ? ' · Firma: ' + fi : ''}`, 40, 58);
-  doc.text(`${statRows.length} segnalazioni · quantità totale -${tot} · ${statTop.length} articoli distinti`, 40, 72);
-  doc.autoTable({
-    startY: 86,
-    head: [['#', 'Articolo', 'Descrizione', 'Volte', 'Q.tà', 'Ultima']],
-    body: statTop.map((x, i) => [i + 1, x.codice, descMap.get(x.codice.toUpperCase()) || '', x.n, -x.qty, fmtD(x.last)]),
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [13, 58, 55] },
-    columnStyles: { 3: { halign: 'right' }, 4: { halign: 'right' } }
-  });
-  window.open(doc.output('bloburl'), '_blank');
-};
-
-document.addEventListener('click', e => {
-  const t = e.target.closest('[data-goto]'); if (!t) return;
-  $('#q-cerca').value = t.dataset.goto; goView('cerca');
-});
-$('#st-xls').onclick = () => {
-  if (!statRows.length) return toast('Niente da esportare', 'bad');
-  const stati = { nuovo: 'Nuovo', sc_richiesta: 'Seconda spunta richiesta', sc_fatta: 'Seconda spunta eseguita', confermato: 'Confermato' };
-  const s1 = statTop.map((x, i) => ({ '#': i + 1, Articolo: x.codice, Descrizione: descMap.get(x.codice.toUpperCase()) || '', 'N. segnalazioni': x.n, 'Quantità totale': -x.qty, 'Ultima data': fmtD(x.last) }));
-  const s2 = statRows.map(r => ({ 'Data foglio': fmtD(r.data_foglio), 'Inserito il': fmtDT(r.created_at), Articolo: r.codice, Descrizione: descMap.get((r.codice || '').toUpperCase()) || '', Ubicazione: r.ubicazione || '', Quantità: -r.quantita, Firma: r.firmatario, Stato: stati[r.stato] || r.stato, 'N. modifiche': r.modificato_n, Eliminato: r.eliminato ? 'SÌ' : '' }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s1), 'Statistiche');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s2), 'Dettagli');
-  XLSX.writeFile(wb, `kohinoor_${localDate(new Date())}.xlsx`);
-};
-
-/* ============ RESPONSABILE · CESTINO ============ */
-const trashDays = () => parseInt(localStorage.getItem('kohinoor_trash_days'), 10) || 0;
-$('#cos-days').value = trashDays();
-$('#cos-days').onchange = e => {
-  localStorage.setItem('kohinoor_trash_days', e.target.value);
-  toast(e.target.value === '0' ? 'Nessun limite impostato' : `Segnalo come vecchi dopo ${e.target.value} giorni`, 'ok');
-
-  loadTrash();
-};
-async function loadTrash() {
-  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', true).order('eliminato_il', { ascending: false }).limit(200);
-  if (error) return toast(error.message, 'bad');
-  renderList($('#cos-list'), data, 'trash', 'Il cestino è vuoto');
-}
-
-
-$('#cos-all').onclick = () => { const cb = $$('#cos-list .sel'); const all = cb.length && cb.every(x => x.checked); cb.forEach(x => x.checked = !all); };
-$('#cos-old').onclick = () => {
-  if (!trashDays()) return toast('Scegli prima dopo quanti giorni', 'bad');
-  $$('#cos-list .row').forEach(row => {
-    const r = R.get(row.dataset.id);
-    const age = Math.floor((Date.now() - new Date(r.eliminato_il)) / 864e5);
-    $('.sel', row).checked = age >= trashDays();
-  });
-};
-
-$('#cos-rest').onclick = async () => {
-  const ids = $$('#cos-list .sel:checked').map(x => x.closest('.row').dataset.id);
-  if (!ids.length) return toast('Seleziona almeno una riga', 'bad');
-  const { error } = await sb.from(T_MAN).update({ eliminato: false, modificato_da: 'Responsabile' }).in('id', ids);
-  if (error) return toast(error.message, 'bad');
-  toast(`${ids.length} righe ripristinate`, 'ok'); refresh();
-};
-$('#cos-purge').onclick = async () => {
-  const ids = $$('#cos-list .sel:checked').map(x => x.closest('.row').dataset.id);
-  if (!ids.length) return toast('Seleziona almeno una riga', 'bad');
-  if (!confirm(`Eliminare DEFINITIVAMENTE ${ids.length} righe? Non si può annullare.`)) return;
-  const { error } = await sb.from(T_MAN).delete().eq('tipo', 'segnalazione').eq('eliminato', true).in('id', ids);
-  if (error) return toast(error.message, 'bad');
-  toast(`${ids.length} righe eliminate definitivamente`, 'ok'); refresh();
-};
-
-
-/* ============ RESPONSABILE · IMPOSTAZIONI ============ */
-async function loadSet() {
-  await loadFirme();
-  $('#set-firme').innerHTML = firme.length ? firme.map(f => `<div class="frow"><span class="av">${esc(f.name.trim().charAt(0).toUpperCase())}</span><b>${esc(f.name)}${accessi.has(f.name) ? '<svg class="i lk"><use href="#i-lock"/></svg>' : ''}</b>${pwBtns(f.name)}<button class="btn sm ghost bad" data-delfirma="${f.id}" data-name="${esc(f.name)}">${ic('trash')}<span>Elimina</span></button></div>`).join('') : emptyMsg('Nessuna firma');
-  renderBoss();
-  $('#set-count').textContent = `Articoli nel sistema: ${articoli.length.toLocaleString('it-IT')}`;
-}
-document.addEventListener('click', async e => {
-  const b = e.target.closest('[data-delfirma]'); if (!b) return;
-  if (!confirm(`Eliminare la firma «${b.dataset.name}»? Le registrazioni precedenti restano invariate.`)) return;
-  const { error } = await sb.from(T_MAN).delete().eq('id', b.dataset.delfirma);
-  if (error) return toast(error.message, 'bad');
-  if (accessiOk) await sb.from(T_ACC).delete().eq('nome', b.dataset.name);
-  loadSet();
-});
-$('#set-addfirma').onclick = async () => {
-  const name = $('#set-newfirma').value.trim(); if (!name) return;
-  const { error } = await sb.from(T_MAN).insert({ tipo: 'firmatario', firmatario: name });
-  if (error) return toast(error.code === '23505' ? 'Questa firma esiste già' : error.message, 'bad');
-  $('#set-newfirma').value = ''; loadSet();
-};
-$('#set-file').addEventListener('change', async e => {
-  const file = e.target.files[0]; if (!file) return;
-  const st = $('#set-status');
-  try {
-    st.textContent = 'Leggo il file…';
-    const wb = XLSX.read(await file.arrayBuffer());
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
-    if (!rows.length) throw new Error('Il file è vuoto');
-    const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
-    const keys = {}; Object.keys(rows[0]).forEach(k => keys[norm(k)] = k);
-    const kc = keys.articolo || keys.codice;
-    if (!kc) throw new Error('Non trovo la colonna «Articolo»');
-    const kd = keys.descrizione, ku = keys.codubicazione || keys.ubicazione, km = keys.codmagazzino;
-    const val = (r, k) => k ? String(r[k] ?? '').trim() : '';
-    const seen = new Set(), out = []; let skipped = 0;
-    for (const r of rows) {
-      const c = val(r, kc); if (!c) { skipped++; continue; }
-      if (seen.has(c.toUpperCase())) continue; seen.add(c.toUpperCase());
-      out.push({ codice: c, descrizione: val(r, kd), ubicazione: val(r, ku).toUpperCase(), cod_magazzino: val(r, km) });
+    const raw = await readSheet(f), agg = new Map();
+    for (const r of raw){
+      const art = clean(pick(r, ['articolo','codarticol','cod'])), ubi = clean(pick(r, ['ubicazione','codubicazione']));
+      const qty = parseNum(pick(r, ['cantitate','qta','quantit','qty','giacenza','pezzi','pz','bucati']));
+      if (!art || !ubi || !(qty > 0)) continue;
+      const k = art + '\u0001' + ubi; agg.set(k, (agg.get(k) || 0) + qty);
     }
-    if (!out.length) throw new Error('Non ho trovato nessun articolo nel file');
-    if (!confirm(`Verranno cancellati i ${articoli.length} articoli attuali e caricati ${out.length} dal file (${skipped} righe senza articolo ignorate). Continuare?`)) { e.target.value = ''; st.textContent = ''; return; }
-    st.textContent = 'Cancello il vecchio elenco…';
-    let r = await sb.from(T_ART).delete().gt('id', 0); if (r.error) throw r.error;
-    for (let i = 0; i < out.length; i += 1000) {
-      st.textContent = `Carico… ${Math.min(i + 1000, out.length)} / ${out.length}`;
-      r = await sb.from(T_ART).insert(out.slice(i, i + 1000)); if (r.error) throw r.error;
+    const rows = [...agg].map(([k, qty]) => { const [art, ubi] = k.split('\u0001'); return {art, ubi, qty}; });
+    if (!rows.length) throw new Error('Nessuna riga valida trovata (colonne: Articolo, Ubicazione, Cantitate).');
+    if (!confirm(`Caricare "${f.name}" (${rows.length} righe)?\nLa giacenza attuale verrà sostituita.`)) return;
+    setStock(rows, f.name, false);
+    banner(`Giacenza caricata: ${fmt(rows.length)} righe.`, 'ok');
+  } catch(err){ banner(esc(err.message), 'err'); }
+}
+function genDemo(){
+  if (S.stock.length && !confirm('Sostituire la giacenza attuale con dati demo?')) return;
+  const cat = S.catalog.filter(r => r.articolo && r.cap_max);
+  if (!cat.length) return banner('Nessun articolo ha una capacità massima. Imposta la capacità nel Catalogo, poi genera la simulazione.', 'err');
+  const locs = [...new Set(S.catalog.map(r => r.ubicazione))];
+  const rnd = n => Math.floor(Math.random() * n);
+  const rows = [], demoCap = {};
+  const chosen = [...cat].sort(() => Math.random() - .5).slice(0, 70);  // solo articoli con capacità
+  for (const c of chosen){
+    const cap = c.cap_max;
+    const step = cap >= 300 ? 25 : 10;
+    const casella = Math.random() < .2 ? 0 : step * (1 + rnd(Math.floor(cap / step / 1.5)));
+    if (casella) rows.push({art: c.articolo, ubi: c.ubicazione, qty: casella});
+    const used = new Set([c.ubicazione]);
+    for (let i = 1 + rnd(5); i > 0; i--){
+      const u = locs[rnd(locs.length)]; if (used.has(u)) continue; used.add(u);
+      rows.push({art: c.articolo, ubi: u, qty: step * (1 + rnd(Math.floor(cap / step / 1.2)))});
     }
-    await loadArticoli(); loadSet();
-    st.innerHTML = `<span style="color:var(--ok)">✓ Fatto: ${out.length} articoli caricati</span>`;
-  } catch (err) { st.innerHTML = `<span style="color:var(--bad)">Errore: ${esc(err.message)}. Riprova l'importazione.</span>`; }
-  e.target.value = '';
-});
-
-/* ============ PASSWORD ============ */
-const toHex = buf => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
-const fromHex = h => new Uint8Array(h.match(/../g).map(x => parseInt(x, 16)));
-async function hashPw(pw, salt) {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
-  return toHex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256));
-}
-async function makePw(pw) { const salt = crypto.getRandomValues(new Uint8Array(16)); return toHex(salt) + ':' + await hashPw(pw, salt); }
-async function checkPw(pw, stored) {
-  try { const [s, h] = stored.split(':'); return (await hashPw(pw, fromHex(s))) === h; } catch (_) { return false; }
-}
-const saveUnl = () => sessionStorage.setItem('kohinoor_unlocked', JSON.stringify([...unlocked]));
-async function loadAccessi() {
-  const { data, error } = await sb.from(T_ACC).select('nome,pw_hash');
-  if (error) { accessiOk = false; return; }
-  accessiOk = true; accessi = new Map(data.map(r => [r.nome, r.pw_hash]));
-  if (firma && accessi.has(firma) && !unlocked.has(firma)) { firma = null; localStorage.removeItem('kohinoor_firma'); renderFirme(); }
-}
-function pwDialog({ title, msg, again, verify }) {
-  return new Promise(res => {
-    const d = $('#pwdlg'), a = $('#pw-a'), b = $('#pw-b'), err = $('#pw-err');
-    $('#pw-title').textContent = title; $('#pw-msg').textContent = msg || '';
-    a.value = ''; b.value = ''; err.textContent = ''; $('#pw-b-wrap').hidden = !again;
-    let done = false;
-    const fin = v => { if (done) return; done = true; d.close(); res(v); };
-    $('#pw-ok').onclick = async () => {
-      if (!a.value) { err.textContent = 'Scrivi la password'; return; }
-      if (again && a.value !== b.value) { err.textContent = 'Le password non coincidono'; return; }
-      if (verify && !(await verify(a.value))) { err.textContent = 'Password errata'; a.value = ''; a.focus(); return; }
-      fin(a.value);
-    };
-    $('#pw-cancel').onclick = () => fin(null);
-    d.onclose = () => fin(null);
-    a.onkeydown = b.onkeydown = ev => { if (ev.key === 'Enter') $('#pw-ok').click(); };
-    d.showModal(); a.focus();
-  });
-}
-async function unlockBoss() {
-  if (unlocked.has('__SEF__')) return true;
-  await loadAccessi();
-  const h = accessi.get('__SEF__');
-  if (!h) return true;
-  const ok = await pwDialog({ title: 'Area responsabile', msg: 'Inserisci la password per continuare', verify: pw => checkPw(pw, h) });
-  if (!ok) return false;
-  unlocked.add('__SEF__'); saveUnl(); return true;
-}
-function pwBtns(name) {
-  const lk = accessi.has(name), n = esc(name);
-  return `<button class="btn sm ghost" data-setpw="${n}">${ic('lock')}<span>${lk ? 'Cambia' : 'Password'}</span></button>` +
-    (lk ? `<button class="btn sm ghost warn" data-rmpw="${n}">${ic('x')}<span>Disattiva</span></button>` : '');
-}
-function renderBoss() {
-  const el = $('#set-boss'); if (!el) return;
-  if (!accessiOk) { el.innerHTML = '<div class="hint" style="color:var(--bad)">Per usare le password serve la tabella «kohinoor_accessi» nel database.</div>'; return; }
-  const lk = accessi.has('__SEF__');
-  el.innerHTML = `<div class="frow"><b>${lk ? 'Protetta con password<svg class="i lk"><use href="#i-lock"/></svg>' : 'Nessuna password'}</b>${pwBtns('__SEF__')}${lk ? `<button class="btn sm ghost" data-bosslock>${ic('lock')}<span>Blocca ora</span></button>` : ''}</div>`;
-}
-async function setPw(name, label) {
-  if (!accessiOk) return toast('Manca la tabella kohinoor_accessi nel database', 'bad');
-  if (!window.crypto || !crypto.subtle) return toast('Le password richiedono una connessione sicura (https)', 'bad');
-  const pw = await pwDialog({ title: 'Imposta password', msg: label, again: true });
-  if (!pw) return;
-  const { error } = await sb.from(T_ACC).upsert({ nome: name, pw_hash: await makePw(pw) });
-  if (error) return toast(error.message, 'bad');
-  if (name === '__SEF__' || name === firma) { unlocked.add(name); saveUnl(); }
-  toast('Password salvata', 'ok'); loadSet();
-}
-async function rmPw(name, label) {
-  if (!confirm(`Disattivare la password per ${label}?`)) return;
-  const { error } = await sb.from(T_ACC).delete().eq('nome', name);
-  if (error) return toast(error.message, 'bad');
-  unlocked.delete(name); saveUnl(); toast('Password disattivata', 'ok'); loadSet();
-}
-document.addEventListener('click', e => {
-  const s = e.target.closest('[data-setpw]'), r = e.target.closest('[data-rmpw]'), l = e.target.closest('[data-bosslock]');
-  const lab = n => n === '__SEF__' ? 'la parte del responsabile' : `«${n}»`;
-  if (s) setPw(s.dataset.setpw, lab(s.dataset.setpw));
-  else if (r) rmPw(r.dataset.rmpw, lab(r.dataset.rmpw));
-  else if (l) { unlocked.delete('__SEF__'); saveUnl(); toast('Area responsabile bloccata', 'ok'); goView('m-ins'); }
-});
-
-/* ============ NAVIGAZIONE ============ */
-const LOAD = { 'm-ins': loadRecent, 'm-sc': loadSc, 'cerca': doSearch, 's-ver': loadVer, 's-stat': loadStat, 's-cos': loadTrash, 's-set': loadSet };
-const TITLES = { 'm-ins': 'Inserimento articoli mancanti', 'm-sc': 'Seconda spunta', 'cerca': 'Ricerca e cronologia', 's-ver': 'Verifica', 's-stat': 'Statistiche', 's-cos': 'Cestino', 's-set': 'Impostazioni' };
-let curView = 'm-ins';
-async function goView(id) {
-  if (id.startsWith('s-') && !(await unlockBoss())) return;
-  curView = id;
-  $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + id));
-  $$('[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === id));
-  $('#vtitle').textContent = TITLES[id];
-  LOAD[id]();
-  if (id === 'cerca') $('#q-cerca').focus();
-  window.scrollTo(0, 0);
-}
-document.addEventListener('click', e => { const v = e.target.closest('[data-view]'); if (v) goView(v.dataset.view); });
-function refresh() { LOAD[curView](); loadCounts(); }
-
-/* ============ TEMPO REALE ============ */
-let rtT, rtArtT;
-async function liveRefresh() {
-  if ($('#dlg').open || $('#pwdlg').open) return;
-  const scope = '#v-' + curView + ' ';
-  const checked = $$(scope + '.sel:checked').map(x => x.closest('.row').dataset.id);
-  const opened = $$(scope + '.hist:not([hidden])').map(h => h.closest('.row').dataset.id);
-  const y = window.scrollY;
-  await Promise.all([LOAD[curView](), loadCounts()]);
-  window.scrollTo(0, y);
-  checked.forEach(id => { const cb = $(`${scope}.row[data-id="${id}"] .sel`); if (cb) cb.checked = true; });
-  opened.forEach(id => {
-    const row = $(`${scope}.row[data-id="${id}"]`), r = R.get(id);
-    if (row && r) { const h = $('.hist', row); h.hidden = false; h.innerHTML = histHTML(r); }
-  });
-}
-const live = () => { clearTimeout(rtT); rtT = setTimeout(liveRefresh, 400); };
-let liveCh, liveWasDown = false;
-function startLive() {
-  if (liveCh) sb.removeChannel(liveCh);
-  liveCh = sb.channel('kohinoor-live')
-  .on('postgres_changes', { event: '*', schema: 'public', table: T_MAN }, p => {
-    const t = (p.new && p.new.tipo) || (p.old && p.old.tipo);
-    if (t === 'firmatario') { curView === 's-set' ? loadSet() : loadFirme(); return; }
-    if (p.new && p.new.ubicazione) addUserUbi(p.new.ubicazione);
-    live();
-  })
-  .on('postgres_changes', { event: '*', schema: 'public', table: T_ART }, () => {
-    clearTimeout(rtArtT);
-    rtArtT = setTimeout(async () => { await loadArticoli(); if (curView === 's-set') loadSet(); }, 3000);
-  })
-  .subscribe(st => {
-    if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { liveWasDown = true; setTimeout(startLive, 3000); }
-    else if (st === 'SUBSCRIBED' && liveWasDown) { liveWasDown = false; liveRefresh(); loadArticoli(); }
-  });
-}
-startLive();
-
-/* ---- heartbeat: ping periodic către Supabase ---- */
-let pingFail = 0;
-async function ping() {
-  try {
-    const { error } = await sb.from(T_ART).select('id').limit(1);
-    if (error) throw error;
-    if (liveDead()) startLive();
-    if (pingFail >= 2) { toast('Connessione ripristinata', 'ok'); startLive(); liveRefresh(); }
-    pingFail = 0;
-  } catch (_) {
-    pingFail++;
-    if (pingFail === 2) toast('Connessione persa, riprovo…', 'bad');
-    try { sb.realtime.connect(); } catch (__) {}
   }
+  S.demoCap = demoCap;
+  setStock(rows, 'Dati demo (simulazione)', true);
+  banner(`Dati demo: giacenza generata casualmente su ${chosen.length} articoli con capacità massima. Non viene salvata su Supabase.`, 'demo');
 }
-setInterval(ping, 25000);
-window.addEventListener('online', ping);
-// rete di sicurezza: se il tempo reale non arriva, aggiorna comunque
-setInterval(() => { if (!document.hidden && liveDead()) liveRefresh(); }, 30000);
-let lastArt = Date.now();
-const liveDead = () => !liveCh || ['closed', 'errored', 'leaving'].includes(liveCh.state);
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) return;
-  if (liveDead()) startLive();
-  liveRefresh();
-  if (Date.now() - lastArt > 600000) { lastArt = Date.now(); loadArticoli(); }
-});
-window.addEventListener('pageshow', e => { if (e.persisted) { if (liveDead()) startLive(); liveRefresh(); } });
 
-/* ============ AVVIO ============ */
-(async function init() {
-  $('#vtitle').textContent = TITLES['m-ins'];
-  caps($('#f-ubi')); caps($('#e-ubi'));
-  $('#f-data').value = localDate(new Date());
-  attachSuggest($('#f-cod'), $('#f-hint'));
-  attachSuggest($('#e-cod'), null);
-  attachSuggest($('#f-ubi'), null, allUbi, { prefix: true, first: () => ubiMap.get($('#f-cod').value.trim().toUpperCase()) });
-  attachSuggest($('#e-ubi'), null, allUbi, { prefix: true, first: () => ubiMap.get($('#e-cod').value.trim().toUpperCase()) });
-  await Promise.all([loadFirme(), loadArticoli(), loadUserUbi()]);
-  loadRecent(); loadCounts();
-  setInterval(loadCounts, 30000);
-  setInterval(() => { if (!$('#f-data').value) $('#f-data').value = localDate(new Date()); }, 60000);
+/* ================= RENDER ================= */
+function renderAll(){ renderCatalogInfo(); renderCatalog(); renderStock(); renderTasks(); renderHeader(); }
+function renderHeader(){
+  const last = S.catalog.reduce((m, r) => r.uploaded_at > m ? r.uploaded_at : m, '');
+  const short = last ? new Date(last).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+  const fmtS = d => new Date(d).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+  const gi = S.stock.length && S.stockTime
+    ? `<b>giacenza ${S.demo ? 'demo ' : ''}${fmtS(S.stockTime)}</b>`
+    : `<b>nessuna giacenza</b>`;
+  $('hdrSub').innerHTML = `KOH-I-NOOR · ${gi}` + (short ? ` <span class="dim">· catalogo ${short}</span>` : '');
+
+}
+function renderCatalogInfo(){
+  const art = S.catalog.filter(r => r.articolo);
+  const withCap = art.filter(r => r.cap_max).length;
+  const last = S.catalog.reduce((m, r) => r.uploaded_at > m ? r.uploaded_at : m, '');
+  $('catInfo').innerHTML = `
+    ${S.noCapCol ? '<div class="msg err">La colonna <b>cap_max</b> non esiste nella tabella. Esegui setup_articoli.sql su Supabase (SQL Editor), poi premi Ricarica.</div>' : ''}
+    <div class="kv">
+      <div><b>${fmt(S.catalog.length)}</b><span>righe</span></div>
+      <div><b>${fmt(art.length)}</b><span>articoli</span></div>
+      <div><b>${fmt(withCap)}</b><span>con capacità</span></div>
+      <div><b>${fmt(art.length - withCap)}</b><span>senza capacità</span></div>
+    </div>
+    <p>Ultimo aggiornamento: <b>${fdt(last)}</b></p>`;
+}
+function renderCatalog(){
+  const term = $('catSearch').value.trim().toLowerCase();
+  let rows = S.catalog.filter(r => r.articolo);
+  // un solo campo: se sembra un'ubicazione (es. C.02) cerca per prefisso sull'ubicazione; altrimenti in articolo/descrizione/ubicazione
+  if (term){
+    const isLoc = /^[a-z]\.\d/i.test(term);
+    rows = rows.filter(r => isLoc ? r.ubicazione.toLowerCase().startsWith(term)
+      : (r.articolo + ' ' + (r.descrizione || '') + ' ' + r.ubicazione).toLowerCase().includes(term));
+  }
+  // filtri ubicazione: prefisso (C.02), parità sul 3° segmento (C.02.[02].01), livello = ultimo segmento (.01)
+  const levels = [...new Set(S.catalog.map(r => r.ubicazione.split('.')).filter(p => p.length === 4).map(p => p[3]))].sort();
+  const lsel = $('catLev');
+  if (lsel.options.length !== levels.length + 1){
+    const cur = lsel.value;
+    lsel.innerHTML = '<option value="">Tutti i livelli</option>' + levels.map(l => `<option value="${esc(l)}">Livello .${esc(l)}</option>`).join('');
+    lsel.value = cur;
+  }
+  const capf = $('catCap').value;
+  if (capf) rows = rows.filter(r => capf === 'with' ? r.cap_max : !r.cap_max);
+  const par = $('catPar').value, lev = lsel.value;
+  if (par || lev) rows = rows.filter(r => {
+    const p = r.ubicazione.split('.'); if (p.length !== 4) return false;
+    if (par){ const n = parseInt(p[2], 10); if (isNaN(n) || (n % 2 === 0) !== (par === 'even')) return false; }
+    return !lev || p[3] === lev;
+  });
+  const shown = rows.slice(0, 120);
+  $('catTable').innerHTML = `<thead><tr><th>Articolo</th><th>Casella</th><th class="num">Cap. max (pz)</th></tr></thead><tbody>` +
+    shown.map(r => `<tr><td><b>${esc(r.articolo)}</b>${r.descrizione ? `<div class="muted" style="font-size:13px;line-height:1.25">${esc(r.descrizione)}</div>` : ''}</td><td>${esc(r.ubicazione)}</td>
+      <td class="num"><input type="number" min="1" inputmode="numeric" class="${r.cap_max ? '' : 'missing'}" value="${r.cap_max || ''}" data-art="${esc(r.articolo)}" ${S.noCapCol ? 'disabled' : ''}></td></tr>`).join('') + '</tbody>';
+  $('catMore').textContent = rows.length > shown.length ? `Visualizzati ${shown.length} di ${fmt(rows.length)} risultati. Restringi i filtri.` : `${fmt(rows.length)} risultati`;
+}
+
+
+function renderStock(){
+  $('stockInfo').innerHTML = S.stock.length
+    ? `<div class="msg ${S.demo ? 'demo' : 'info'}">${esc(S.stockName)} · ${fmt(S.stock.length)} righe · ${S.stockTime ? new Date(S.stockTime).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '—'}</div>`
+    : '<p class="muted">Nessuna giacenza caricata.</p>';
+  const term = $('stockSearch').value.trim().toLowerCase();
+  let rows = S.stock; if (term) rows = rows.filter(r => (r.art + ' ' + r.ubi).toLowerCase().includes(term));
+  $('stockTable').innerHTML = `<thead><tr><th>Articolo</th><th>Ubicazione</th><th class="num">Cantitate</th></tr></thead><tbody>` +
+    rows.slice(0, 200).map(r => `<tr><td>${esc(r.art)}</td><td>${esc(r.ubi)}</td><td class="num">${fmt(r.qty)}</td></tr>`).join('') + '</tbody>';
+}
+function renderTasks(){
+  const catalog = catMap();
+  const res = computeTasks(catalog, S.stock, S.demo ? S.demoCap : null);
+  let list = res.tasks;
+  const st = t => S.status[t.id] || 'todo';
+  const kpi = list.reduce((a, t) => (a.f += t.freed, a.p += t.total, a), {f: 0, p: 0});
+  $('tasksSummary').innerHTML = `<div class="kv">
+    <div><b>${fmt(list.length)}</b><span>attività</span></div>
+    <div><b>${fmt(kpi.f)}</b><span>posizioni da liberare</span></div>
+    <div><b>${fmt(kpi.p)}</b><span>pezzi da spostare</span></div>
+    <div><b>${fmt(list.filter(t => st(t) === 'done').length)}</b><span>completate</span></div></div>`;
+  if (S.filter !== 'all') list = list.filter(t => st(t) === S.filter);
+  const term = $('tasksSearch').value.trim().toLowerCase();
+  if (term) list = list.filter(t => (t.art + ' ' + t.desc + ' ' + t.dest + ' ' + t.moves.map(m => m.ubi).join(' ')).toLowerCase().includes(term));
+  if (S.sort === 'route') list = [...list].sort((a, b) => a.dest.localeCompare(b.dest));
+  // PDF: pagine di lavoro = attività visibili ancora da fare; ultima pagina = tutte quelle completate / con problemi
+  S.viewTasks = list.filter(t => st(t) === 'todo');
+  S.statusTasks = (S.sort === 'route' ? [...res.tasks].sort((a, b) => a.dest.localeCompare(b.dest)) : res.tasks).filter(t => st(t) !== 'todo');
+
+  if (!S.stock.length) $('tasksList').innerHTML = '<div class="msg info">Carica la giacenza (scheda Giacenza) o genera dati demo.</div>';
+  else if (!list.length) $('tasksList').innerHTML = '<p class="muted">Nessuna attività in questa vista.</p>';
+  else $('tasksList').innerHTML = list.map(t => {
+    const s = st(t), key = esc(t.id);
+    return `<details class="task ${s === 'todo' ? '' : s}" data-id="${key}" ${S.open.has(t.id) ? 'open' : ''}>
+      <summary>
+        <div><span class="dest">${esc(t.dest)}</span> <span class="art">${esc(t.art)}</span></div>
+        <div class="desc">${esc(t.desc)}</div>
+        <div class="chips"><span class="chip">${fmt(t.total)} pz</span><span class="chip free">${t.freed} ${t.freed === 1 ? 'posizione liberata' : 'posizioni liberate'}</span></div>
+      </summary>
+      <div class="steps">
+        ${t.moves.map(m => `<div class="step"><span class="loc">${esc(m.ubi)}</span>
+          <span class="act">Prendo <b>${fmt(m.qty)}</b> pezzi <span class="tag">Svuota!</span>
+          ${m.shared ? '<span class="tag warn">contiene altri articoli</span>' : ''}</span></div>`).join('')}
+        <div class="step"><span class="loc">${esc(t.dest)}</span>
+          <span class="act">Deposito nella casella. Giacenza casella: ${fmt(t.casellaQty)} → <b>${fmt(t.after)}</b> / ${fmt(t.cap)} pz</span></div>
+        <div class="acts">
+          <button class="btn ok" data-act="done">Completata</button>
+          <button class="btn bad" data-act="problem">Articolo mancante / problema</button>
+          ${s !== 'todo' ? '<button class="btn" data-act="todo">Riapri</button>' : ''}
+        </div>
+      </div></details>`;
+  }).join('');
+
+  const w = [];
+  const names = a => `<ul class="warnlist">${a.slice(0, 80).map(x => `<li>${esc(x)}</li>`).join('')}${a.length > 80 ? '<li>…</li>' : ''}</ul>`;
+  if (res.noCap.length) w.push(`<details><summary><b>${res.noCap.length}</b> articoli con giacenza in scorta ma senza capacità (non calcolabili)</summary>${names(res.noCap)}</details>`);
+  if (res.noCatalog.length) w.push(`<details><summary><b>${res.noCatalog.length}</b> articoli in giacenza non trovati nel catalogo</summary>${names(res.noCatalog)}</details>`);
+  if (res.full.length) w.push(`<details><summary><b>${res.full.length}</b> articoli con casella già piena (nulla da spostare)</summary>${names(res.full)}</details>`);
+  if (res.noFit.length) w.push(`<details><summary><b>${res.noFit.length}</b> articoli per cui nessuna scorta entra per intero</summary>${names(res.noFit)}</details>`);
+  $('tasksWarn').innerHTML = w.length ? `<div class="box" style="margin-top:14px"><h2>Articoli saltati</h2>${w.map(x => `<div style="margin-bottom:6px">${x}</div>`).join('')}</div>` : '';
+}
+
+/* ================= EVENIMENTE ================= */
+const PW = 'kin';
+let UNLOCKED = false, lockTarget = null;
+try { UNLOCKED = sessionStorage.getItem('abc_unlock') === '1'; } catch(e){}
+function showTab(tab){
+  const locked = !UNLOCKED && tab !== 'tasks';
+  document.querySelectorAll('nav button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === tab));
+  ['tasks', 'stock', 'catalog'].forEach(t => $('tab-' + t).classList.toggle('hide', t !== tab || locked));
+  $('tab-lock').classList.toggle('hide', !locked);
+  if (locked){ lockTarget = tab; $('lockPw').value = ''; $('lockErr').textContent = ''; setTimeout(() => $('lockPw').focus(), 50); }
+}
+function tryUnlock(){
+  if ($('lockPw').value.trim() === PW){
+    UNLOCKED = true;
+    try { sessionStorage.setItem('abc_unlock', '1'); } catch(e){}
+    showTab(lockTarget || 'stock');
+  } else { $('lockErr').textContent = 'Codice errato'; $('lockPw').value = ''; }
+}
+$('lockBtn').onclick = tryUnlock;
+$('lockPw').onkeydown = e => { if (e.key === 'Enter') tryUnlock(); };
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$('tasksFilter').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.filter = b.dataset.f;
+  $('tasksFilter').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  renderTasks();
+};
+$('tasksSort').onchange = e => { S.sort = e.target.value; renderTasks(); };
+(function(){
+  const seg = $('tasksFilter');
+  const upd = () => {
+    seg.classList.toggle('fl', seg.scrollLeft > 2);
+    seg.classList.toggle('fr', seg.scrollLeft + seg.clientWidth < seg.scrollWidth - 2);
+  };
+  seg.addEventListener('scroll', upd, {passive: true});
+  if (window.ResizeObserver) new ResizeObserver(upd).observe(seg);
+  window.addEventListener('resize', upd);
+  upd();
 })();
+$('tasksSearch').oninput = renderTasks;
+$('stockSearch').oninput = renderStock;
+$('catSearch').oninput = renderCatalog;
+$('catPar').onchange = renderCatalog;
+$('catLev').onchange = renderCatalog;
+$('catCap').onchange = renderCatalog;
+$('tasksList').addEventListener('toggle', e => {
+  const d = e.target; if (!d.dataset || !d.dataset.id) return;
+  const id = d.dataset.id;
+  d.open ? S.open.add(id) : S.open.delete(id);
+}, true);
+$('tasksList').onclick = e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const tid = b.closest('details').dataset.id;
+  if (b.dataset.act === 'todo') delete S.status[tid]; else S.status[tid] = b.dataset.act;
+  S.open.delete(tid);
+  try { localStorage.setItem('abc_status', JSON.stringify(S.status)); } catch(err){}
+  renderTasks();
+};
+$('catTable').addEventListener('change', e => { if (e.target.dataset.art) saveCap(e.target.dataset.art, e.target.value); });
+$('catFile').onchange = onCatFile;
+$('stockFile').onchange = onStockFile;
+$('btnDemo').onclick = genDemo;
+$('btnClearStock').onclick = () => {
+  if (!S.stock.length || !confirm('Eliminare la giacenza caricata?')) return;
+  S.demo = false; S.demoCap = {}; S.stock = [];
+  try { localStorage.removeItem('abc_stock'); } catch(e){}
+  banner(''); renderAll();
+};
+$('btnCatDownload').onclick = downloadCatalog;
+$('btnPdf').onclick = makePdf;
+$('btnCapFill').onclick = fillCaps;
+$('btnCapExport').onclick = exportCaps;
+$('capFile').onchange = onCapFile;
+$('btnCatReload').onclick = async () => { try { await loadCatalog(); renderAll(); banner(''); } catch(e){ banner('Errore: ' + esc(e.message), 'err'); } };
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+/*PDF-START*/
+/* ================= PDF ATTIVITÀ ================= */
+function makePdf(){
+  const list = S.viewTasks || [];
+  const done = (S.statusTasks || []).filter(t => S.status[t.id] === 'done');
+  const prob = (S.statusTasks || []).filter(t => S.status[t.id] === 'problem');
+  if (!list.length && !done.length && !prob.length) return banner('Nessuna attività da stampare.', 'err');
+  if (!window.jspdf) return banner('Libreria PDF non caricata. Controlla la connessione e ricarica la pagina.', 'err');
+  const win = window.open('', '_blank');   // se deschide subito (în gestul de click), altfel iPhone-ul blochează fereastra
+  if (win) try { win.document.write('<p style="font-family:sans-serif">Generazione PDF…</p>'); } catch(e){}
+  const doc = new window.jspdf.jsPDF({unit: 'mm', format: 'a4'});
+  const W = 210, H = 297, M = 12, FOOT = 10;
+  const now = new Date();
+  const when = now.toLocaleString('it-IT', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+  const totPz = list.reduce((a, t) => a + t.total, 0), totPos = list.reduce((a, t) => a + t.freed, 0);
+  const parts = (x, yy, arr, size) => {            // testo con segmenti normali/grassetto sulla stessa riga
+    doc.setFontSize(size);
+    arr.forEach(([txt, bold]) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.text(txt, x, yy); x += doc.getTextWidth(txt); });
+  };
+  let y = M;
+  if (list.length){
+    doc.setTextColor(0); doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
+    doc.text('Abbassamento - foglio di lavoro', M, y + 6);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90);
+    doc.text('Magazzino KOH-I-NOOR  |  ' + when, M, y + 12);
+    doc.text(`${list.length} attività  |  ${totPos} posizioni da liberare  |  ${totPz} pezzi da spostare`, M, y + 17);
+    doc.setTextColor(0); doc.setDrawColor(0); doc.setLineWidth(.6); doc.line(M, y + 21, W - M, y + 21);
+    y += 26;
+  }
 
+  list.forEach((t, i) => {
+    const h = 14 + (t.moves.length + 1) * 7 + 6 + 3;
+    if (y + h > H - M - FOOT){
+      doc.addPage(); y = M;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(90);
+      doc.text('Abbassamento  |  ' + when, M, y + 3); doc.setTextColor(0); y += 8;
+    }
+    const top = y;
+    doc.setDrawColor(120); doc.setLineWidth(.3); doc.rect(M, top, W - 2 * M, h);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(110); doc.text(String(i + 1), M + 2, top + 5); doc.setTextColor(0);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.text(t.dest, M + 9, top + 7);
+    const dw = doc.getTextWidth(t.dest);
+    doc.setFontSize(11); doc.text(t.art, M + 9 + dw + 4, top + 7);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(90);
+    doc.text(String(doc.splitTextToSize(t.desc || '', W - 2 * M - 62)[0] || ''), M + 9, top + 12);
+    doc.setTextColor(0); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+    doc.text(`${t.total} pz`, W - M - 3, top + 6.5, {align: 'right'});
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text(`${t.freed} ${t.freed === 1 ? 'posizione liberata' : 'posizioni liberate'}`, W - M - 3, top + 11.5, {align: 'right'});
+    let ry = top + 14; doc.setDrawColor(190); doc.line(M, ry, W - M, ry); doc.setDrawColor(0);
+    t.moves.forEach(m => {
+      ry += 7; doc.rect(M + 3, ry - 5, 4, 4);
+      parts(M + 10, ry - 1.7, [['Prelevare da ', false], [m.ubi, true], [`:  ${m.qty} pz  (svuotare)`, false], [m.shared ? '  - contiene altri articoli' : '', false]], 11);
+    });
+    ry += 7; doc.rect(M + 3, ry - 5, 4, 4);
+    parts(M + 10, ry - 1.7, [['Depositare in casella ', false], [t.dest, true]], 11);
+    ry += 6;
+    parts(M + 10, ry - 1.7, [
+      ['Già in casella: ', false], [`${t.casellaQty} pz${t.casellaQty ? '' : ' (vuota)'}`, true],
+      ['    Da aggiungere: ', false], [`+${t.total} pz`, true],
+      ['    Totale: ', false], [`${t.after} / ${t.cap} pz`, true]], 10);
+    y = top + h + 4;
+  });
+
+  if (done.length || prob.length){
+    if (list.length) doc.addPage();
+    let sy = M;
+    doc.setTextColor(0); doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+    doc.text('Riepilogo attività completate e con problemi', M, sy + 6);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90);
+    doc.text(`Magazzino KOH-I-NOOR  |  ${when}  |  ${done.length} completate  |  ${prob.length} con problemi`, M, sy + 12);
+    doc.setTextColor(0); doc.setDrawColor(0); doc.setLineWidth(.6); doc.line(M, sy + 16, W - M, sy + 16);
+    sy += 21;
+    const section = (title, arr, red) => {
+      if (!arr.length) return;
+      if (sy + 22 > H - M - FOOT){ doc.addPage(); sy = M; }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+      if (red) doc.setTextColor(179, 38, 30); else doc.setTextColor(31, 122, 77);
+      doc.text(`${title} (${arr.length})`, M, sy + 5); doc.setTextColor(0); sy += 9;
+      arr.forEach(t => {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+        const lines = doc.splitTextToSize('Prelevate da: ' + t.moves.map(m => `${m.ubi} (${m.qty})`).join(', '), W - 2 * M - 6);
+        const h = 13 + lines.length * 3.6 + (red ? 6 : 0);
+        if (sy + h > H - M - FOOT){ doc.addPage(); sy = M; }
+        doc.setTextColor(0); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text(t.dest, M + 2, sy + 5);
+        doc.setFontSize(10); doc.text(t.art, M + 36, sy + 5);
+        doc.text(`${t.total} pz  -  ${t.freed} pos.`, W - M - 2, sy + 5, {align: 'right'});
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(90);
+        doc.text(String(doc.splitTextToSize(t.desc || '', W - 2 * M - 80)[0] || ''), M + 36, sy + 9);
+        doc.text(lines, M + 2, sy + 13);
+        if (red){
+          const ny = sy + 13 + lines.length * 3.6 + 2.5;
+          doc.setTextColor(0); doc.setFontSize(9); doc.text('Nota:', M + 2, ny);
+          doc.setDrawColor(150); doc.setLineWidth(.2); doc.line(M + 12, ny + .5, W - M - 2, ny + .5);
+        }
+        doc.setTextColor(0); doc.setDrawColor(190); doc.setLineWidth(.2); doc.line(M, sy + h - 1, W - M, sy + h - 1);
+        sy += h;
+      });
+      sy += 4;
+    };
+    section('Completate', done, false);
+    section('Con problemi', prob, true);
+  }
+
+  const n = doc.getNumberOfPages();
+  for (let p = 1; p <= n; p++){
+    doc.setPage(p); doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(110);
+    doc.text(`Pagina ${p} / ${n}`, W - M, H - 7, {align: 'right'});
+  }
+  const fname = 'abbassamento_' + now.toISOString().slice(0, 10) + '.pdf';
+  if (win){ win.location.href = doc.output('bloburl'); }
+  else { banner('Il browser ha bloccato la nuova scheda: il PDF viene scaricato.', 'info'); doc.save(fname); }
+}
+/*PDF-END*/
+
+/* ================= OROLOGIO ================= */
+function tickClock(){
+  const d = new Date();
+  $('hdrDate').textContent = d.toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
+  $('hdrTime').textContent = d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+tickClock(); setInterval(tickClock, 1000);
+
+/* ================= HEARTBEAT SUPABASE ================= */
+const HB_MS = 6000;
+let hbTimer = null, hbFails = 0;
+function setConn(ok){
+  const el = $('conn'); el.className = ok ? 'ok' : 'bad';
+  el.textContent = ok ? 'connesso' : 'nessuna connessione';
+}
+async function ping(){
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/${TABLE}?select=id&limit=1`, {headers: SB_HEADERS});
+    if (!res.ok) throw new Error(res.status);
+    const recovered = hbFails >= 2 || !S.loadedOnce;
+    hbFails = 0; setConn(true);
+    if (recovered && !S.pendingCat && document.activeElement?.tagName !== 'INPUT'){
+      try { await loadCatalog(); renderAll(); banner(''); } catch(e){}
+    }
+  } catch(e){ if (++hbFails >= 2) setConn(false); }
+}
+function hbStart(){
+  hbStop(); ping();
+  hbTimer = setInterval(() => { if (document.visibilityState === 'visible') ping(); }, HB_MS);
+}
+function hbStop(){ clearInterval(hbTimer); hbTimer = null; }
+document.addEventListener('visibilitychange', () => document.hidden ? hbStop() : hbStart());
+window.addEventListener('pageshow', hbStart);
+window.addEventListener('online', hbStart);
+window.addEventListener('offline', () => { hbFails = 2; setConn(false); });
+hbStart();
+
+
+(async function init(){
+  renderAll();
+  try { await loadCatalog(); renderAll(); }
+  catch(e){ banner('Impossibile connettersi a Supabase: ' + esc(e.message) + '. Controlla la tabella e le policy (setup_articoli.sql).', 'err'); }
+})();
 </script>
 </body>
 </html>
