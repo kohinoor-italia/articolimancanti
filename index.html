@@ -925,10 +925,11 @@ $('#cos-days').onchange = e => {
   loadTrash();
 };
 async function loadTrash() {
-  const { data, error } = await sb.from(T_MAN)
+  const { data, error } = await sb.from(T_MAN).select('*').eq('tipo', 'segnalazione').eq('eliminato', true).order('eliminato_il', { ascending: false }).limit(200);
   if (error) return toast(error.message, 'bad');
   renderList($('#cos-list'), data, 'trash', 'Il cestino è vuoto');
 }
+
 
 $('#cos-all').onclick = () => { const cb = $$('#cos-list .sel'); const all = cb.length && cb.every(x => x.checked); cb.forEach(x => x.checked = !all); };
 $('#cos-old').onclick = () => {
