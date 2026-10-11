@@ -20,6 +20,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 <style>
 :root{
   --spruce:#0d3a37;--spruce2:#124a45;--bg:#edf2f0;--card:#fff;--ink:#14211f;--mut:#5d716b;--line:#d6e0dc;--soft:#f4f8f7;
@@ -773,7 +776,27 @@ async function loadStat() {
     : emptyMsg('Nessuna registrazione per i filtri scelti');
 }
 $('#st-go').onclick = loadStat;
-$('#st-print').onclick = () => window.print();
+$('#st-print').onclick = () => {
+  if (!statTop.length) return toast('Niente da stampare', 'bad');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const tot = statRows.reduce((s, r) => s + r.quantita, 0);
+  const fi = $('#st-firma').value;
+  doc.setFontSize(16); doc.text('Mancanze - Statistiche', 40, 40);
+  doc.setFontSize(10);
+  doc.text(`Periodo: ${fmtD($('#st-from').value)} - ${fmtD($('#st-to').value)}${fi ? ' · Firma: ' + fi : ''}`, 40, 58);
+  doc.text(`${statRows.length} segnalazioni · quantità totale -${tot} · ${statTop.length} articoli distinti`, 40, 72);
+  doc.autoTable({
+    startY: 86,
+    head: [['#', 'Articolo', 'Descrizione', 'Volte', 'Q.tà', 'Ultima']],
+    body: statTop.map((x, i) => [i + 1, x.codice, descMap.get(x.codice.toUpperCase()) || '', x.n, -x.qty, fmtD(x.last)]),
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [13, 58, 55] },
+    columnStyles: { 3: { halign: 'right' }, 4: { halign: 'right' } }
+  });
+  window.open(doc.output('bloburl'), '_blank');
+};
+
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-goto]'); if (!t) return;
   $('#q-cerca').value = t.dataset.goto; goView('cerca');
