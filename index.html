@@ -856,7 +856,7 @@ $('#ver-sc').onclick = () => bulk('sc_richiesta');
 let statRows = [], statTop = [];
 async function loadStat() {
   if (!$('#st-from').value) { const d = new Date(); d.setDate(d.getDate() - 30); $('#st-from').value = localDate(d); $('#st-to').value = localDate(new Date()); }
-  $('#st-table').innerHTML = emptyMsg('Caricamento…');
+  if (!$('#st-table').children.length) $('#st-table').innerHTML = emptyMsg('Caricamento…');
   const from = $('#st-from').value, to = $('#st-to').value, fi = $('#st-firma').value, cod = $('#st-cod').value.trim().replace(/[%,()*_]/g, ''), del = $('#st-del').checked;
   try {
     statRows = await fetchAll(() => {
@@ -1116,7 +1116,9 @@ async function liveRefresh() {
   const scope = '#v-' + curView + ' ';
   const checked = $$(scope + '.sel:checked').map(x => x.closest('.row').dataset.id);
   const opened = $$(scope + '.hist:not([hidden])').map(h => h.closest('.row').dataset.id);
+  const y = window.scrollY;
   await Promise.all([LOAD[curView](), loadCounts()]);
+  window.scrollTo(0, y);
   checked.forEach(id => { const cb = $(`${scope}.row[data-id="${id}"] .sel`); if (cb) cb.checked = true; });
   opened.forEach(id => {
     const row = $(`${scope}.row[data-id="${id}"]`), r = R.get(id);
