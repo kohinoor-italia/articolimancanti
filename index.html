@@ -219,6 +219,8 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
   .nav{font-size:10px;letter-spacing:-.01em}
   .nav.on::before{display:none}
   .nav .cnt{position:absolute;top:0;right:8px;margin:0;font-size:10px;padding:0 5px;min-width:16px}
+  body:not(.show-boss) .nav[data-view^="s-"]{display:none}
+
   .content{padding:0 12px 96px}
   .topbar{flex-wrap:wrap;gap:8px 12px;padding:calc(12px + env(safe-area-inset-top,0px)) 0 10px}
   .topbar h1{font-size:20px;flex:1 1 0;min-width:0;order:0}
@@ -1119,6 +1121,20 @@ async function goView(id) {
   window.scrollTo(0, 0);
 }
 document.addEventListener('click', e => { const v = e.target.closest('[data-view]'); if (v) goView(v.dataset.view); });
+
+/* tap de 5 ori pe «Inserimento» = arată taburile șefului (doar până la reîncărcarea paginii) */
+let bossTaps = 0, bossTapT;
+document.querySelector('.nav[data-view="m-ins"]').addEventListener('click', () => {
+  bossTaps++;
+  clearTimeout(bossTapT);
+  bossTapT = setTimeout(() => bossTaps = 0, 2500);
+  if (bossTaps >= 5) {
+    bossTaps = 0;
+    document.body.classList.toggle('show-boss');
+    toast(document.body.classList.contains('show-boss') ? 'Taburi șef vizibile' : 'Taburi șef ascunse', 'ok');
+  }
+});
+
 function refresh() { LOAD[curView](); loadCounts(); }
 
 /* ============ TEMPO REALE ============ */
