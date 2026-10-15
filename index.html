@@ -1072,7 +1072,9 @@ $('#set-file').addEventListener('change', async e => {
     }
     st.textContent = 'Cancello i dati vecchi…';
     const d = await sb.from(T_ART).delete().or('batch_id.is.null,batch_id.neq.' + batch); if (d.error) throw d.error;
+    batch = null;
     await loadArticoli(); loadSet();
+
     st.innerHTML = `<span style="color:var(--ok)">✓ Fatto: ${out.length} righe caricate</span>`;
   } catch (err) {
     if (batch) { try { await sb.from(T_ART).delete().eq('batch_id', batch); } catch (_) {} }
