@@ -17,7 +17,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -251,6 +252,53 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
   .card{padding:16px;border-radius:14px}
   .cards{grid-template-columns:1fr}
 }
+
+/* ---------- butoane rotunde în topbar (doar telefon) ---------- */
+.mnav{display:none}
+@media(max-width:900px){
+  .side .nav[data-view="m-ins"],.side .nav[data-view="m-sc"],.side .nav[data-view="cerca"]{display:none}
+  body:not(.show-boss) .side{display:none}
+  body:not(.show-boss) .content{padding-bottom:24px}
+  .sig{flex:0 0 calc(60% - 6px);order:2;min-width:0}
+  .mnav{order:2;flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:4px}
+  .rn{position:relative;flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:var(--spruce);color:#fff;cursor:pointer}
+  .rn svg.i{width:20px;height:20px}
+  .rn.on{background:var(--pri)}
+  .rn .cnt{position:absolute;top:-5px;right:-5px;margin:0;font-size:10.5px;padding:1px 5px;min-width:18px;border:2px solid var(--bg)}
+}
+
+/* ---------- buton Salva ---------- */
+#f-save{
+  position:relative;overflow:hidden;
+  padding:16px 18px;margin-top:24px;border-radius:14px;
+  font-size:17px;font-weight:800;letter-spacing:.01em;
+  background:linear-gradient(135deg,#e8601a 0%,var(--pri) 55%,#a8360a 100%);
+  box-shadow:0 8px 20px rgba(194,65,12,.35),inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .12s,box-shadow .2s,filter .2s;
+}
+#f-save::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.25) 50%,transparent 70%);
+  transform:translateX(-120%);transition:transform .6s;
+}
+#f-save:hover{filter:brightness(1.07);box-shadow:0 10px 26px rgba(194,65,12,.45),inset 0 1px 0 rgba(255,255,255,.28)}
+#f-save:hover::after{transform:translateX(120%)}
+#f-save:active{transform:scale(.97);box-shadow:0 3px 9px rgba(194,65,12,.35),inset 0 1px 0 rgba(255,255,255,.2)}
+#f-save svg.i{
+  box-sizing:content-box;width:16px;height:16px;padding:4px;stroke-width:3;
+  border-radius:50%;background:rgba(255,255,255,.22);
+}
+
+/* ---------- firma scrisă de mână ---------- */
+.firme-sel.signed{
+  font-family:"Mrs Saint Delafield","Segoe Script","Brush Script MT",cursive;
+  font-size:24px;font-weight:400;line-height:1;
+  padding-top:4px;padding-bottom:4px;
+  color:#14307a;letter-spacing:.01em;
+}
+.firme-sel option{font-family:"Hanken Grotesk",system-ui,sans-serif;font-size:16px;color:var(--ink)}
+
+
 @media print{.side,.topbar,.noprint,#toast{display:none!important}.app{display:block}body{background:#fff}.content{padding:0}.card{border:0;padding:0}.scroll{max-height:none;overflow:visible;border:0}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -315,7 +363,13 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
       <svg class="i"><use href="#i-user"/></svg>
       <div class="firme-bar"></div>
     </label>
+    <div class="mnav">
+      <button class="rn on" data-view="m-ins" aria-label="Inserimento"><svg class="i"><use href="#i-plus"/></svg></button>
+      <button class="rn" data-view="m-sc" aria-label="Seconda spunta"><svg class="i"><use href="#i-checks"/></svg><span class="cnt" id="cnt-sc2" data-n="0"></span></button>
+      <button class="rn" data-view="cerca" aria-label="Ricerca"><svg class="i"><use href="#i-search"/></svg></button>
+    </div>
     <div id="clock"></div>
+
   </header>
 
   <!-- ============ INSERIMENTO ============ -->
@@ -579,7 +633,10 @@ function renderFirme() {
     ? `<select class="firme-sel"><option value="">— scegli la firma —</option>${firme.map(f => `<option value="${esc(f.name)}" ${f.name === firma ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}</select>`
     : '<span class="muted">Aggiungi le firme in Responsabile → Impostazioni</span>';
   $$('.firme-bar').forEach(el => el.innerHTML = html);
+  markSigned();
 }
+function markSigned() { $$('.firme-sel').forEach(x => x.classList.toggle('signed', !!x.value)); }
+
 document.addEventListener('change', async e => {
   const s = e.target.closest('.firme-sel'); if (!s) return;
   const nf = s.value || null;
@@ -591,6 +648,8 @@ document.addEventListener('change', async e => {
   firma = nf;
   if (firma) localStorage.setItem('kohinoor_firma', firma); else localStorage.removeItem('kohinoor_firma');
   $$('.firme-sel').forEach(x => x.value = firma || '');
+  markSigned();
+
 });
 function needFirma() { if (!firma) { toast('Scegli prima la firma', 'bad'); return null; } return firma; }
 
@@ -843,7 +902,8 @@ async function loadSc() {
 async function loadCounts() {
   const q = st => sb.from(T_MAN).select('id', { count: 'exact', head: true }).eq('tipo', 'segnalazione').eq('eliminato', false).in('stato', st);
   const [a, b] = await Promise.all([q(['sc_richiesta']), q(['nuovo', 'sc_fatta'])]);
-  const sc = $('#cnt-sc'); sc.dataset.n = a.count || 0; sc.textContent = a.count || '';
+  ['#cnt-sc', '#cnt-sc2'].forEach(s => { const sc = $(s); sc.dataset.n = a.count || 0; sc.textContent = a.count || ''; });
+
   const ve = $('#cnt-ver'); ve.dataset.n = b.count || 0; ve.textContent = b.count || '';
 }
 
@@ -1199,7 +1259,7 @@ document.addEventListener('click', e => { const v = e.target.closest('[data-view
 
 /* tap de 5 ori pe «Inserimento» = arată taburile șefului (doar până la reîncărcarea paginii) */
 let bossTaps = 0, bossTapT;
-document.querySelector('.nav[data-view="m-ins"]').addEventListener('click', () => {
+document.querySelectorAll('[data-view="m-ins"]').forEach(btn => btn.addEventListener('click', () => {
   bossTaps++;
   clearTimeout(bossTapT);
   bossTapT = setTimeout(() => bossTaps = 0, 2500);
@@ -1208,7 +1268,8 @@ document.querySelector('.nav[data-view="m-ins"]').addEventListener('click', () =
     document.body.classList.toggle('show-boss');
     toast(document.body.classList.contains('show-boss') ? 'Taburi șef vizibile' : 'Taburi șef ascunse', 'ok');
   }
-});
+}));
+
 
 function refresh() { LOAD[curView](); loadCounts(); }
 
