@@ -435,7 +435,7 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
       <div class="card">
         <h2><svg class="i"><use href="#i-sheet"/></svg>Elenco articoli</h2>
         <p class="muted" id="set-count" style="margin:0 0 6px;font-weight:600"></p>
-        <p style="margin:0 0 12px;font-size:14px">Colonne: Cod Magazzino, Cod ubicazione, Articolo, Descrizione. Le righe senza articolo vengono ignorate. <b>L'importazione cancella tutto ciò che esiste e riscrive l'elenco.</b></p>
+        <p style="margin:0 0 12px;font-size:14px">Colonne: Cod Magazzino, Cod ubicazione, Articolo, Descrizione. Le righe senza articolo (ubicazioni vuote) vengono mantenute. <b>L'importazione sostituisce l'elenco per tutte le app; capacità e scatole restano.</b></p>
         <div class="drop"><input type="file" id="set-file" accept=".xlsx,.xls"></div>
         <div class="hint" id="set-status"></div>
       </div>
@@ -489,7 +489,8 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
 const SUPABASE_URL = 'https://fndjrfieitieqzafhyzz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bHDKjiKAVHqW199ICw7i2g_O3olYMAr';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { heartbeatIntervalMs: 15000 } });
-const T_ART = 'kohinoor_articoli';
+const T_ART = 'articoli';
+
 const T_MAN = 'kohinoor_articolimancanti';
 const T_ACC = 'kohinoor_accessi';
 
@@ -581,12 +582,15 @@ function needFirma() { if (!firma) { toast('Scegli prima la firma', 'bad'); retu
 
 /* ============ ELENCO ARTICOLI ============ */
 async function loadArticoli() {
-  const { count, error } = await sb.from(T_ART).select('id', { count: 'exact', head: true });
+  const { count, error } = await sb.from(T_ART).select('id', { count: 'exact', head: true }).not('articolo', 'is', null);
   if (error) { toast('Errore articoli: ' + error.message, 'bad'); return; }
   const pages = Math.ceil((count || 0) / 1000);
   const parts = await Promise.all(Array.from({ length: pages }, (_, i) =>
-    sb.from(T_ART).select('codice,descrizione,ubicazione').order('id').range(i * 1000, i * 1000 + 999).then(r => { if (r.error) throw r.error; return r.data; })));
-  articoli = parts.flat();
+    sb.from(T_ART).select('articolo,descrizione,ubicazione').not('articolo', 'is', null).order('id').range(i * 1000, i * 1000 + 999).then(r => { if (r.error) throw r.error; return r.data; })));
+  const uniq = new Map();
+  for (const r of parts.flat()) uniq.set(r.articolo.toUpperCase(), { codice: r.articolo, descrizione: r.descrizione, ubicazione: r.ubicazione });
+  articoli = [...uniq.values()];
+
   descMap = new Map(); codeMap = new Map(); ubiMap = new Map();
   for (const a of articoli) { const u = a.codice.toUpperCase(); descMap.set(u, a.descrizione || ''); codeMap.set(u, a.codice); ubiMap.set(u, (a.ubicazione || '').toUpperCase()); }
   ubiList = [...new Set(ubiMap.values())].filter(Boolean).sort(natCmp);
@@ -1013,9 +1017,29 @@ $('#set-addfirma').onclick = async () => {
   if (error) return toast(error.code === '23505' ? 'Questa firma esiste già' : error.message, 'bad');
   $('#set-newfirma').value = ''; loadSet();
 };
+async function loadCapsArt() {
+  const caps = {}, boxes = {};
+  let from = 0, hasBox = true;
+  while (true) {
+    let qy = sb.from(T_ART).select(hasBox ? 'articolo,cap_max,cap_box' : 'articolo,cap_max');
+    qy = hasBox ? qy.or('cap_max.not.is.null,cap_box.not.is.null') : qy.not('cap_max', 'is', null);
+    const r = await qy.order('id').range(from, from + 999);
+    if (r.error) {
+      const em = r.error.message || '';
+      if (hasBox && /cap_box/i.test(em)) { hasBox = false; from = 0; continue; }
+      if (/cap_max/i.test(em)) return null;
+      throw r.error;
+    }
+    r.data.forEach(x => { if (!x.articolo) return; if (x.cap_max) caps[x.articolo] = x.cap_max; if (x.cap_box) boxes[x.articolo] = x.cap_box; });
+    if (r.data.length < 1000) break;
+    from += 1000;
+  }
+  return { caps, boxes, hasBox };
+}
 $('#set-file').addEventListener('change', async e => {
   const file = e.target.files[0]; if (!file) return;
   const st = $('#set-status');
+  let batch = null;
   try {
     st.textContent = 'Leggo il file…';
     const wb = XLSX.read(await file.arrayBuffer());
@@ -1023,29 +1047,40 @@ $('#set-file').addEventListener('change', async e => {
     if (!rows.length) throw new Error('Il file è vuoto');
     const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
     const keys = {}; Object.keys(rows[0]).forEach(k => keys[norm(k)] = k);
-    const kc = keys.articolo || keys.codice;
-    if (!kc) throw new Error('Non trovo la colonna «Articolo»');
-    const kd = keys.descrizione, ku = keys.codubicazione || keys.ubicazione, km = keys.codmagazzino;
+    const ka = keys.articolo || keys.codice, ku = keys.codubicazione || keys.ubicazione;
+    if (!ka || !ku) throw new Error('Non trovo le colonne «Articolo» e «Cod ubicazione»');
+    const kd = keys.descrizione, km = keys.codmagazzino;
     const val = (r, k) => k ? String(r[k] ?? '').trim() : '';
-    const seen = new Set(), out = []; let skipped = 0;
+    batch = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const ts = new Date().toISOString();
+    const out = [];
     for (const r of rows) {
-      const c = val(r, kc); if (!c) { skipped++; continue; }
-      if (seen.has(c.toUpperCase())) continue; seen.add(c.toUpperCase());
-      out.push({ codice: c, descrizione: val(r, kd), ubicazione: val(r, ku).toUpperCase(), cod_magazzino: val(r, km) });
+      const ub = val(r, ku); if (!ub) continue;
+      out.push({ cod_magazzino: val(r, km) || null, ubicazione: ub, articolo: val(r, ka) || null, descrizione: val(r, kd) || null, batch_id: batch, uploaded_at: ts });
     }
-    if (!out.length) throw new Error('Non ho trovato nessun articolo nel file');
-    if (!confirm(`Verranno cancellati i ${articoli.length} articoli attuali e caricati ${out.length} dal file (${skipped} righe senza articolo ignorate). Continuare?`)) { e.target.value = ''; st.textContent = ''; return; }
-    st.textContent = 'Cancello il vecchio elenco…';
-    let r = await sb.from(T_ART).delete().gt('id', 0); if (r.error) throw r.error;
-    for (let i = 0; i < out.length; i += 1000) {
-      st.textContent = `Carico… ${Math.min(i + 1000, out.length)} / ${out.length}`;
-      r = await sb.from(T_ART).insert(out.slice(i, i + 1000)); if (r.error) throw r.error;
+    if (!out.length) throw new Error('Nessuna riga valida trovata');
+    if (!confirm(`Il database attuale (comune a tutte le app) verra SOSTITUITO con ${out.length} righe dal file. Capacita massime e pezzi per scatola verranno mantenuti. Continuare?`)) { e.target.value = ''; st.textContent = ''; batch = null; return; }
+    st.textContent = 'Leggo capacità e scatole…';
+    const cp = await loadCapsArt();
+    if (cp) out.forEach(o => {
+      o.cap_max = (o.articolo && cp.caps[o.articolo]) ? cp.caps[o.articolo] : null;
+      if (cp.hasBox) o.cap_box = (o.articolo && cp.boxes[o.articolo]) ? cp.boxes[o.articolo] : null;
+    });
+    for (let i = 0; i < out.length; i += 500) {
+      st.textContent = `Carico… ${Math.min(i + 500, out.length)} / ${out.length}`;
+      const r = await sb.from(T_ART).insert(out.slice(i, i + 500)); if (r.error) throw r.error;
     }
+    st.textContent = 'Cancello i dati vecchi…';
+    const d = await sb.from(T_ART).delete().or('batch_id.is.null,batch_id.neq.' + batch); if (d.error) throw d.error;
     await loadArticoli(); loadSet();
-    st.innerHTML = `<span style="color:var(--ok)">✓ Fatto: ${out.length} articoli caricati</span>`;
-  } catch (err) { st.innerHTML = `<span style="color:var(--bad)">Errore: ${esc(err.message)}. Riprova l'importazione.</span>`; }
+    st.innerHTML = `<span style="color:var(--ok)">✓ Fatto: ${out.length} righe caricate</span>`;
+  } catch (err) {
+    if (batch) { try { await sb.from(T_ART).delete().eq('batch_id', batch); } catch (_) {} }
+    st.innerHTML = `<span style="color:var(--bad)">Errore: ${esc(err.message)}. Il vecchio elenco è rimasto invariato.</span>`;
+  }
   e.target.value = '';
 });
+
 
 /* ============ PASSWORD ============ */
 const toHex = buf => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
