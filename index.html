@@ -1342,7 +1342,70 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pageshow', e => { if (e.persisted) { if (liveDead()) startLive(); liveRefresh(); } });
 
+/* ============ EAN: scanare → cod articol ============ */
+let EANMAP = {};
+function applyEanPairs(pairs){ EANMAP = {}; pairs.forEach(p => EANMAP[p[0]] = p[1]); }
+async function loadEan(){
+  const KEY = 'ean_cache_v2';
+  let c = null;
+  try { c = JSON.parse(localStorage.getItem(KEY)); } catch (_) {}
+  try {
+    const r = await sb.from('ean').select('uploaded_at').order('uploaded_at', { ascending: false }).limit(1);
+    if (r.error) throw r.error;
+    const remote = r.data.length ? r.data[0].uploaded_at : null;
+    if (c && c.pairs && remote && c.date === remote){ applyEanPairs(c.pairs); return; }
+    const all = await fetchAll(() => sb.from('ean').select('codice,codice_articolo,descrizione,uploaded_at').order('codice'));
+    const pairs = all.map(x => [String(x.codice), String(x.codice_articolo).trim(), x.descrizione || '']);
+    const date = all.reduce((m, x) => x.uploaded_at && x.uploaded_at > m ? x.uploaded_at : m, '');
+    applyEanPairs(pairs);
+    try { localStorage.setItem(KEY, JSON.stringify({ date, pairs })); } catch (_) {}
+  } catch (_) {
+    if (c && c.pairs) applyEanPairs(c.pairs);
+  }
+}
+function fillCod(inp, art){
+  inp.value = codeMap.get(art.toUpperCase()) || art;
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+  const sg = inp.parentNode.querySelector('.sugg'); if (sg) sg.hidden = true;
+}
+let scanBuf = '', scanBufT = null;
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  const a = document.activeElement;
+  /* scanerul scrie direct în câmpul Codice articolo */
+  if (a && (a.id === 'f-cod' || a.id === 'e-cod')){
+    if (e.key !== 'Enter') return;
+    const v = a.value.trim();
+    const art = EANMAP[v];
+    if (art){ e.preventDefault(); e.stopImmediatePropagation(); fillCod(a, art); }
+    else if (/^\d{12,14}$/.test(v) && !codeMap.has(v.toUpperCase())){
+      e.preventDefault(); e.stopImmediatePropagation();
+      a.value = '';
+      const sg = a.parentNode.querySelector('.sugg'); if (sg) sg.hidden = true;
+      if (a.id === 'f-cod') $('#f-hint').innerHTML = '';
+    }
+    return;
+  }
+  if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+  if (curView !== 'm-ins' || $('#dlg').open || $('#pwdlg').open) return;
+  if (e.key === 'Enter'){
+    if (scanBuf.length >= 3){
+      e.preventDefault();
+      const c = scanBuf; scanBuf = ''; clearTimeout(scanBufT);
+      const art = EANMAP[c] || codeMap.get(c.toUpperCase());
+      if (art) fillCod($('#f-cod'), art);
+    }
+    scanBuf = ''; return;
+  }
+  if (e.key.length !== 1) return;
+  scanBuf += e.key;
+  clearTimeout(scanBufT);
+  scanBufT = setTimeout(() => { scanBuf = ''; }, 400);
+}, true);
+loadEan();
+
 /* ============ AVVIO ============ */
+
 (async function init() {
   $('#vtitle').textContent = TITLES['m-ins'];
   caps($('#f-ubi')); caps($('#e-ubi'));
