@@ -1349,6 +1349,8 @@ async function loadEan(){
   const KEY = 'ean_cache_v2';
   let c = null;
   try { c = JSON.parse(localStorage.getItem(KEY)); } catch (_) {}
+  if (c && c.pairs) applyEanPairs(c.pairs);
+
   try {
     const r = await sb.from('ean').select('uploaded_at').order('uploaded_at', { ascending: false }).limit(1);
     if (r.error) throw r.error;
@@ -1369,6 +1371,11 @@ function fillCod(inp, art){
   const sg = inp.parentNode.querySelector('.sugg'); if (sg) sg.hidden = true;
 }
 let scanBuf = '', scanBufT = null;
+function clearCod(a){
+  a.value = '';
+  const sg = a.parentNode.querySelector('.sugg'); if (sg) sg.hidden = true;
+  if (a.id === 'f-cod') $('#f-hint').innerHTML = '';
+}
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.altKey || e.metaKey) return;
   const a = document.activeElement;
@@ -1376,14 +1383,13 @@ document.addEventListener('keydown', e => {
   if (a && (a.id === 'f-cod' || a.id === 'e-cod')){
     if (e.key !== 'Enter') return;
     const v = a.value.trim();
-    const art = EANMAP[v];
-    if (art){ e.preventDefault(); e.stopImmediatePropagation(); fillCod(a, art); }
-    else if (/^\d{12,14}$/.test(v) && !codeMap.has(v.toUpperCase())){
-      e.preventDefault(); e.stopImmediatePropagation();
-      a.value = '';
-      const sg = a.parentNode.querySelector('.sugg'); if (sg) sg.hidden = true;
-      if (a.id === 'f-cod') $('#f-hint').innerHTML = '';
-    }
+    if (!(/^\d{12,14}$/.test(v) || EANMAP[v])) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    EANREADY.then(() => {
+      const art = EANMAP[v];
+      if (art) fillCod(a, art);
+      else if (!codeMap.has(v.toUpperCase())) clearCod(a);
+    });
     return;
   }
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
@@ -1392,8 +1398,10 @@ document.addEventListener('keydown', e => {
     if (scanBuf.length >= 3){
       e.preventDefault();
       const c = scanBuf; scanBuf = ''; clearTimeout(scanBufT);
-      const art = EANMAP[c] || codeMap.get(c.toUpperCase());
-      if (art) fillCod($('#f-cod'), art);
+      EANREADY.then(() => {
+        const art = EANMAP[c] || codeMap.get(c.toUpperCase());
+        if (art) fillCod($('#f-cod'), art);
+      });
     }
     scanBuf = ''; return;
   }
@@ -1402,7 +1410,9 @@ document.addEventListener('keydown', e => {
   clearTimeout(scanBufT);
   scanBufT = setTimeout(() => { scanBuf = ''; }, 400);
 }, true);
-loadEan();
+
+const EANREADY = loadEan();
+
 
 /* ============ AVVIO ============ */
 
