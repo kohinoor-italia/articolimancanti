@@ -1123,9 +1123,11 @@ $('#set-file').addEventListener('change', async e => {
     if (!rows.length) throw new Error('Il file è vuoto');
     const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
     const keys = {}; Object.keys(rows[0]).forEach(k => keys[norm(k)] = k);
-    const ka = keys.articolo || keys.codice, ku = keys.codubicazione || keys.ubicazione;
+const ka = keys.articolo || keys.codice || keys.arcodar2, ku = keys.codubicazione || keys.ubicazione || keys.ubcodice;
+
     if (!ka || !ku) throw new Error('Non trovo le colonne «Articolo» e «Cod ubicazione»');
-    const kd = keys.descrizione, km = keys.codmagazzino;
+const kd = keys.descrizione || keys.ardesart, km = keys.codmagazzino || keys.ubcodmag;
+
     const val = (r, k) => k ? String(r[k] ?? '').trim() : '';
     batch = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const ts = new Date().toISOString();
