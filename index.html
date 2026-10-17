@@ -500,11 +500,13 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
         </div>
       </div>
       <div class="card">
-        <h2><svg class="i"><use href="#i-sheet"/></svg>Elenco articoli</h2>
+<h2><svg class="i"><use href="#i-sheet"/></svg>Elenco casele fisse</h2>
+
         <p class="muted" id="set-count" style="margin:0 0 6px;font-weight:600"></p>
-        <p style="margin:0 0 12px;font-size:14px">Colonne: Cod Magazzino, Cod ubicazione, Articolo, Descrizione. Le righe senza articolo (ubicazioni vuote) vengono mantenute. <b>L'importazione sostituisce l'elenco per tutte le app; capacità e scatole restano.</b></p>
+<p style="margin:0 0 12px;font-size:14px">Elenco delle sole caselle fisse del magazzino. Colonne: Cod Magazzino, Cod ubicazione, Articolo. Le righe senza articolo (ubicazioni vuote) vengono mantenute. La descrizione dell'articolo viene presa dalla tabella EAN. <b>L'importazione sostituisce l'elenco per tutte le app; capacità e scatole restano.</b></p>
+
         <details style="margin:0 0 12px;font-size:14px">
-          <summary style="cursor:pointer;font-weight:700">Come caricare l'elenco articoli</summary>
+          <summary style="cursor:pointer;font-weight:700">Come caricare l'elenco delle caselle fisse</summary>
           <ol style="margin:8px 0 0;padding-left:20px;line-height:1.6">
             <li>Apri <b>AdHoc</b> ed entra in <b>Logistica</b>.</li>
             <li>Vai su <b>Report</b>.</li>
@@ -682,7 +684,7 @@ async function loadArticoli() {
   descMap = new Map(); codeMap = new Map(); ubiMap = new Map();
   for (const a of articoli) { const u = a.codice.toUpperCase(); descMap.set(u, a.descrizione || ''); codeMap.set(u, a.codice); ubiMap.set(u, (a.ubicazione || '').toUpperCase()); }
   ubiList = [...new Set(ubiMap.values())].filter(Boolean).sort(natCmp);
-  $('#set-count').textContent = `Articoli nel sistema: ${articoli.length.toLocaleString('it-IT')}` + (ARTDATE ? ` · aggiornato ${fmtDT(ARTDATE)}` : '');
+  $('#set-count').textContent = `Caselle nel sistema: ${articoli.length.toLocaleString('it-IT')}` + (ARTDATE ? ` · aggiornato ${fmtDT(ARTDATE)}` : '');
 }
 function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt = {}) {
   const wrap = document.createElement('div'); wrap.className = 'sw';
@@ -711,7 +713,8 @@ function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt
   }
   const check = () => {
     const v = inp.value.trim().toUpperCase();
-    const known = codeMap.has(v);
+    const known = codeMap.has(v) || EANART.has(v);
+
     if (!hintEl) return;
     if (!v || !articoli.length) hintEl.innerHTML = '';
     else if (known) hintEl.innerHTML = '<span style="color:var(--ok)">✓ articolo presente nell\'elenco</span>';
@@ -794,7 +797,8 @@ const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
 function rowHTML(r, ctx) {
   R.set(r.id, r);
   const boss = ctx === 'ver' || ctx === 'trash';
-  const desc = boss ? (descMap.get((r.codice || '').toUpperCase()) || '') : '';
+  const desc = boss ? descOf(r.codice) : '';
+
   const retro = r.data_foglio !== localDate(r.created_at);
   const st = { nuovo: ['Nuovo', ''], sc_richiesta: ['Seconda spunta richiesta', 'warn'], sc_fatta: ['Seconda spunta eseguita', 'info'], confermato: ['Confermato', 'ok'] }[r.stato] || ['', ''];
   let b = '';
@@ -901,8 +905,9 @@ async function saveIns() {
   if (!codice) return toast('Scrivi il codice dell\'articolo', 'bad');
   if (!(q > 0)) return toast('Scrivi la quantità', 'bad');
   if (!d) return toast('Scegli la data', 'bad');
-  const known = codeMap.get(codice.toUpperCase());
+  const known = codeMap.get(codice.toUpperCase()) || (EANART.get(codice.toUpperCase()) || {}).c;
   if (known) codice = known;
+
   else if (articoli.length && !confirm(`«${codice}» non è nell'elenco articoli. Salvare comunque?`)) return;
   const btn = $('#f-save'); btn.disabled = true;
   const { data: dup } = await sb.from(T_MAN).select('quantita,firmatario').eq('tipo', 'segnalazione').eq('eliminato', false).eq('codice', codice).eq('data_foglio', d).limit(5);
@@ -1020,7 +1025,7 @@ async function loadStat() {
   const tot = statRows.reduce((s, r) => s + r.quantita, 0), max = statTop[0]?.n || 1;
   $('#st-kpi').innerHTML = `<div class="kpi"><b>${statRows.length}</b><span>segnalazioni</span></div><div class="kpi"><b>-${tot}</b><span>quantità totale</span></div><div class="kpi"><b>${statTop.length}</b><span>articoli distinti</span></div>`;
   $('#st-table').innerHTML = statTop.length ? `<table><thead><tr><th>#</th><th>Articolo</th><th class="n">Volte</th><th class="n">Q.tà</th><th>Ultima</th><th style="width:25%"></th></tr></thead><tbody>` +
-    statTop.map((x, i) => `<tr class="clk" data-goto="${esc(x.codice)}"><td>${i + 1}</td><td><b>${esc(x.codice)}</b><br><span class="muted">${esc(descMap.get(x.codice.toUpperCase()) || '')}</span></td><td class="n"><b>${x.n}</b></td><td class="n">-${x.qty}</td><td>${fmtD(x.last)}</td><td><div class="bar2" style="width:${Math.round(x.n / max * 100)}%"></div></td></tr>`).join('') + '</tbody></table>'
+    statTop.map((x, i) => `<tr class="clk" data-goto="${esc(x.codice)}"><td>${i + 1}</td><td><b>${esc(x.codice)}</b><br><span class="muted">${esc(descOf(x.codice))}</span></td><td class="n"><b>${x.n}</b></td><td class="n">-${x.qty}</td><td>${fmtD(x.last)}</td><td><div class="bar2" style="width:${Math.round(x.n / max * 100)}%"></div></td></tr>`).join('') + '</tbody></table>'
     : emptyMsg('Nessuna registrazione per i filtri scelti');
 }
 $('#st-go').onclick = loadStat;
@@ -1037,7 +1042,7 @@ $('#st-print').onclick = () => {
   doc.autoTable({
     startY: 86,
     head: [['#', 'Articolo', 'Descrizione', 'Volte', 'Q.tà', 'Ultima']],
-    body: statTop.map((x, i) => [i + 1, x.codice, descMap.get(x.codice.toUpperCase()) || '', x.n, -x.qty, fmtD(x.last)]),
+    body: statTop.map((x, i) => [i + 1, x.codice, descOf(x.codice), x.n, -x.qty, fmtD(x.last)]),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [13, 58, 55] },
     columnStyles: { 3: { halign: 'right' }, 4: { halign: 'right' } }
@@ -1052,8 +1057,8 @@ document.addEventListener('click', e => {
 $('#st-xls').onclick = () => {
   if (!statRows.length) return toast('Niente da esportare', 'bad');
   const stati = { nuovo: 'Nuovo', sc_richiesta: 'Seconda spunta richiesta', sc_fatta: 'Seconda spunta eseguita', confermato: 'Confermato' };
-  const s1 = statTop.map((x, i) => ({ '#': i + 1, Articolo: x.codice, Descrizione: descMap.get(x.codice.toUpperCase()) || '', 'N. segnalazioni': x.n, 'Quantità totale': -x.qty, 'Ultima data': fmtD(x.last) }));
-  const s2 = statRows.map(r => ({ 'Data foglio': fmtD(r.data_foglio), 'Inserito il': fmtDT(r.created_at), Articolo: r.codice, Descrizione: descMap.get((r.codice || '').toUpperCase()) || '', Ubicazione: r.ubicazione || '', Quantità: -r.quantita, Firma: r.firmatario, Stato: stati[r.stato] || r.stato, 'N. modifiche': r.modificato_n, Eliminato: r.eliminato ? 'SÌ' : '' }));
+  const s1 = statTop.map((x, i) => ({ '#': i + 1, Articolo: x.codice, Descrizione: descOf(x.codice), 'N. segnalazioni': x.n, 'Quantità totale': -x.qty, 'Ultima data': fmtD(x.last) }));
+  const s2 = statRows.map(r => ({ 'Data foglio': fmtD(r.data_foglio), 'Inserito il': fmtDT(r.created_at), Articolo: r.codice, Descrizione: descOf(r.codice), Ubicazione: r.ubicazione || '', Quantità: -r.quantita, Firma: r.firmatario, Stato: stati[r.stato] || r.stato, 'N. modifiche': r.modificato_n, Eliminato: r.eliminato ? 'SÌ' : '' }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s1), 'Statistiche');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s2), 'Dettagli');
@@ -1108,7 +1113,7 @@ async function loadSet() {
   await loadFirme();
   $('#set-firme').innerHTML = firme.length ? firme.map(f => `<div class="frow"><span class="av">${esc(f.name.trim().charAt(0).toUpperCase())}</span><b>${esc(f.name)}${accessi.has(f.name) ? '<svg class="i lk"><use href="#i-lock"/></svg>' : ''}</b>${pwBtns(f.name)}<button class="btn sm ghost bad" data-delfirma="${f.id}" data-name="${esc(f.name)}">${ic('trash')}<span>Elimina</span></button></div>`).join('') : emptyMsg('Nessuna firma');
   renderBoss();
-  $('#set-count').textContent = `Articoli nel sistema: ${articoli.length.toLocaleString('it-IT')}` + (ARTDATE ? ` · aggiornato ${fmtDT(ARTDATE)}` : '');
+  $('#set-count').textContent = `Caselle nel sistema: ${articoli.length.toLocaleString('it-IT')}` + (ARTDATE ? ` · aggiornato ${fmtDT(ARTDATE)}` : '');
 }
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-delfirma]'); if (!b) return;
@@ -1375,7 +1380,18 @@ window.addEventListener('pageshow', e => { if (e.persisted) { if (liveDead()) st
 
 /* ============ EAN: scanare → cod articol ============ */
 let EANMAP = {};
-function applyEanPairs(pairs){ EANMAP = {}; pairs.forEach(p => EANMAP[p[0]] = p[1]); }
+let EANART = new Map();
+function applyEanPairs(pairs){
+  EANMAP = {}; EANART = new Map();
+  pairs.forEach(p => { EANMAP[p[0]] = p[1]; const u = p[1].toUpperCase(); if (!EANART.has(u)) EANART.set(u, { c: p[1], d: p[2] }); });
+}
+const descOf = c => { const u = (c || '').toUpperCase(); return descMap.get(u) || (EANART.get(u) || {}).d || ''; };
+
+const allCodes = () => {
+  const s = new Set(codeMap.keys());
+  return [...articoli.map(a => a.codice), ...[...EANART.values()].filter(x => !s.has(x.c.toUpperCase())).map(x => x.c)];
+};
+
 async function loadEan(){
   const KEY = 'ean_cache_v2';
   let c = null;
@@ -1451,8 +1467,9 @@ const EANREADY = loadEan();
   $('#vtitle').textContent = TITLES['m-ins'];
   caps($('#f-ubi')); caps($('#e-ubi'));
   $('#f-data').value = localDate(new Date());
-  attachSuggest($('#f-cod'), $('#f-hint'));
-  attachSuggest($('#e-cod'), null);
+  attachSuggest($('#f-cod'), $('#f-hint'), allCodes);
+  attachSuggest($('#e-cod'), null, allCodes);
+
   attachSuggest($('#f-ubi'), null, allUbi, { prefix: true, first: () => ubiMap.get($('#f-cod').value.trim().toUpperCase()) });
   attachSuggest($('#e-ubi'), null, allUbi, { prefix: true, first: () => ubiMap.get($('#e-cod').value.trim().toUpperCase()) });
   await Promise.all([loadFirme(), loadArticoli(), loadUserUbi()]);
