@@ -133,6 +133,17 @@ input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--pri)}
 .sw.hasclr.filled .clr{display:grid;animation:clrIn .15s ease-out}
 @keyframes clrIn{from{opacity:0;transform:translateY(-50%) scale(.6)}to{opacity:1;transform:translateY(-50%) scale(1)}}
 
+.sw.hasloc input{padding-right:48px}
+.labrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+.labrow label{margin:0}
+.labrow .hint{margin:0;min-height:0;text-align:right}
+.labrow + div + .grid2{margin-top:14px}
+
+
+.locb{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:8px;background:#fbf3ee;color:var(--pri);display:grid;place-items:center;cursor:pointer;padding:0}
+.locb[hidden]{display:none}
+.locb:active{transform:translateY(-50%) scale(.9)}
+.locb svg.i{width:17px;height:17px}
 
 
 /* ---------- liste ---------- */
@@ -333,6 +344,8 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
 <symbol id="i-sheet" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M10 9H8"/></symbol>
 <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 7V4H6l6 8-6 8h12v-3"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
+
 </defs></svg>
 
 <div class="app">
@@ -376,9 +389,9 @@ dialog h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px}
   <section class="view on" id="v-m-ins">
     <div class="split">
       <div class="card">
-        <label class="first">Codice articolo</label>
+        <div class="labrow"><label class="first">Codice articolo</label><div class="hint" id="f-hint"></div></div>
         <div><input id="f-cod" autocomplete="off" autocapitalize="characters" placeholder="Inizia a scrivere il codice…"></div>
-        <div class="hint" id="f-hint"></div>
+
         <div class="grid2">
           <div><label class="first">Ubicazione</label><input id="f-ubi" autocomplete="off" autocapitalize="characters" placeholder="es. A.01.01.01"></div>
 <div><label class="first">Quantità mancante</label><div class="qw"><input id="f-qty" type="number" inputmode="numeric" min="1" placeholder="0"></div></div>
@@ -736,7 +749,25 @@ function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt
     e.preventDefault(); e.stopPropagation();
     inp.value = first.dataset.v; box.hidden = true; check();
   });
-  inp.addEventListener('blur', () => setTimeout(() => box.hidden = true, 150));
+  if (opt.first) {
+    wrap.classList.add('hasloc');
+    const lb = document.createElement('button');
+    lb.type = 'button'; lb.className = 'locb'; lb.hidden = true;
+    lb.title = 'Ubicazione articolo'; lb.setAttribute('aria-label', 'Ubicazione articolo');
+    lb.innerHTML = '<svg class="i"><use href="#i-home"/></svg>';
+
+    wrap.appendChild(lb);
+    const syncLb = () => { lb.hidden = !(opt.first() || ''); };
+    syncLb(); setInterval(syncLb, 300);
+    lb.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const v = (opt.first() || '').toUpperCase(); if (!v) return;
+      inp.value = v; box.hidden = true;
+
+    });
+    document.addEventListener('pointerdown', e => { if (!wrap.contains(e.target)) box.hidden = true; });
+  }
+
 }
 
 /* ============ RIGHE ============ */
