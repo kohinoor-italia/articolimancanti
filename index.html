@@ -668,24 +668,72 @@ document.addEventListener('change', async e => {
 });
 function needFirma() { if (!firma) { toast('Scegli prima la firma', 'bad'); return null; } return firma; }
 
+
+/* ---- cache persistent (IndexedDB) ---- */
+const idb = (() => {
+  let p;
+  const open = () => p || (p = new Promise((res, rej) => {
+    const r = indexedDB.open('kohinoor_cache', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+  return {
+    async get(k) {
+      try {
+        const db = await open();
+        return await new Promise((res, rej) => {
+          const q = db.transaction('kv').objectStore('kv').get(k);
+          q.onsuccess = () => res(q.result ?? null);
+          q.onerror = () => rej(q.error);
+        });
+      } catch (_) { return null; }
+    },
+    async set(k, v) {
+      try {
+        const db = await open();
+        await new Promise((res, rej) => {
+          const t = db.transaction('kv', 'readwrite');
+          t.objectStore('kv').put(v, k);
+          t.oncomplete = res; t.onerror = () => rej(t.error);
+        });
+      } catch (_) {}
+    }
+  };
+})();
+
+
 /* ============ ELENCO ARTICOLI ============ */
-async function loadArticoli() {
-  const { count, error } = await sb.from(T_ART).select('id', { count: 'exact', head: true }).not('articolo', 'is', null);
-  if (error) { toast('Errore articoli: ' + error.message, 'bad'); return; }
-  const pages = Math.ceil((count || 0) / 1000);
-  const parts = await Promise.all(Array.from({ length: pages }, (_, i) =>
-    sb.from(T_ART).select('articolo,descrizione,ubicazione,uploaded_at').not('articolo', 'is', null).order('id').range(i * 1000, i * 1000 + 999).then(r => { if (r.error) throw r.error; return r.data; })));
+function applyArticoli(rows, date) {
   const uniq = new Map();
-  for (const r of parts.flat()) uniq.set(r.articolo.toUpperCase(), { codice: r.articolo, descrizione: r.descrizione, ubicazione: r.ubicazione });
+  for (const r of rows) uniq.set(r.articolo.toUpperCase(), { codice: r.articolo, descrizione: r.descrizione, ubicazione: r.ubicazione });
   articoli = [...uniq.values()];
-  ARTDATE = parts.flat().reduce((m, r) => r.uploaded_at > m ? r.uploaded_at : m, '');
-
-
+  ARTDATE = date || '';
   descMap = new Map(); codeMap = new Map(); ubiMap = new Map();
   for (const a of articoli) { const u = a.codice.toUpperCase(); descMap.set(u, a.descrizione || ''); codeMap.set(u, a.codice); ubiMap.set(u, (a.ubicazione || '').toUpperCase()); }
   ubiList = [...new Set(ubiMap.values())].filter(Boolean).sort(natCmp);
   $('#set-count').textContent = `Caselle nel sistema: ${articoli.length.toLocaleString('it-IT')}` + (ARTDATE ? ` · aggiornato ${fmtDT(ARTDATE)}` : '');
 }
+async function loadArticoli() {
+  const cache = await idb.get('articoli_v1');
+  if (cache && !articoli.length) applyArticoli(cache.rows, cache.date);   // afișare instant din cache
+  // control ieftin: număr rânduri + data ultimului import
+  const [c, l] = await Promise.all([
+    sb.from(T_ART).select('id', { count: 'exact', head: true }).not('articolo', 'is', null),
+    sb.from(T_ART).select('uploaded_at').not('articolo', 'is', null).order('uploaded_at', { ascending: false }).limit(1)
+  ]);
+  if (c.error || l.error) { if (!cache) toast('Errore articoli: ' + (c.error || l.error).message, 'bad'); return; }
+  const count = c.count || 0, lastDate = (l.data[0] && l.data[0].uploaded_at) || '';
+  if (cache && cache.count === count && cache.date === lastDate) return;   // nimic schimbat → 0 descărcare
+
+  const pages = Math.ceil(count / 1000);
+  const parts = await Promise.all(Array.from({ length: pages }, (_, i) =>
+    sb.from(T_ART).select('articolo,descrizione,ubicazione').not('articolo', 'is', null).order('id').range(i * 1000, i * 1000 + 999).then(r => { if (r.error) throw r.error; return r.data; })));
+  const rows = parts.flat();
+  applyArticoli(rows, lastDate);
+  idb.set('articoli_v1', { rows, date: lastDate, count });
+}
+
 function attachSuggest(inp, hintEl, src = () => articoli.map(a => a.codice), opt = {}) {
   const wrap = document.createElement('div'); wrap.className = 'sw';
   inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
@@ -1338,10 +1386,7 @@ function startLive() {
     if (p.new && p.new.ubicazione) addUserUbi(p.new.ubicazione);
     live();
   })
-  .on('postgres_changes', { event: '*', schema: 'public', table: T_ART }, () => {
-    clearTimeout(rtArtT);
-    rtArtT = setTimeout(async () => { await loadArticoli(); if (curView === 's-set') loadSet(); }, 3000);
-  })
+
   .subscribe(st => {
     if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { liveWasDown = true; setTimeout(startLive, 3000); }
     else if (st === 'SUBSCRIBED' && liveWasDown) { liveWasDown = false; liveRefresh(); loadArticoli(); }
@@ -1374,7 +1419,8 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   if (liveDead()) startLive();
   liveRefresh();
-  if (Date.now() - lastArt > 600000) { lastArt = Date.now(); loadArticoli(); }
+if (Date.now() - lastArt > 120000) { lastArt = Date.now(); loadArticoli().then(() => { if (curView === 's-set') loadSet(); }); }
+
 });
 window.addEventListener('pageshow', e => { if (e.persisted) { if (liveDead()) startLive(); liveRefresh(); } });
 
@@ -1393,25 +1439,22 @@ const allCodes = () => {
 };
 
 async function loadEan(){
-  const KEY = 'ean_cache_v2';
-  let c = null;
-  try { c = JSON.parse(localStorage.getItem(KEY)); } catch (_) {}
+  let c = await idb.get('ean_v2');
   if (c && c.pairs) applyEanPairs(c.pairs);
-
   try {
     const r = await sb.from('ean').select('uploaded_at').order('uploaded_at', { ascending: false }).limit(1);
     if (r.error) throw r.error;
     const remote = r.data.length ? r.data[0].uploaded_at : null;
-    if (c && c.pairs && remote && c.date === remote){ applyEanPairs(c.pairs); return; }
+    if (c && c.pairs && remote && c.date === remote) return;
     const all = await fetchAll(() => sb.from('ean').select('codice,codice_articolo,descrizione,uploaded_at').order('codice'));
     const pairs = all.map(x => [String(x.codice), String(x.codice_articolo).trim(), x.descrizione || '']);
     const date = all.reduce((m, x) => x.uploaded_at && x.uploaded_at > m ? x.uploaded_at : m, '');
     applyEanPairs(pairs);
-    try { localStorage.setItem(KEY, JSON.stringify({ date, pairs })); } catch (_) {}
-  } catch (_) {
-    if (c && c.pairs) applyEanPairs(c.pairs);
-  }
+    await idb.set('ean_v2', { date, pairs });
+    try { localStorage.removeItem('ean_cache_v2'); } catch (_) {}
+  } catch (_) {}
 }
+
 function fillCod(inp, art){
   inp.value = codeMap.get(art.toUpperCase()) || art;
   inp.dispatchEvent(new Event('input', { bubbles: true }));
